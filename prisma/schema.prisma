@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String    @unique
+  password    String
+  gender      String?
+  birthdate   DateTime?
+  phone       String?
+  address     String?
+  role        Role      @default(MOTORIST)
+  profile     String?   @unique 
+  isLoggedIn  Boolean   @default(false) 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  motorists   Motorist[]
+  customers   Customer[]
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  userId    String
+  phone     String?
+  address   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries Delivery[]
+}
+
+model Motorist {
+  id                String   @id @default(cuid())
+  userId            String
+  licenseNumber     String   @unique
+  vehicleModel      String
+  vehiclePlateNumber String
+  isAvailable       Boolean  @default(true)
+  currentLocation   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries        Delivery[]
+  statistics        MotoristStatistics?
+}
+
+model MotoristStatistics {
+  id                String   @id @default(cuid())
+  motoristId        String   @unique
+  totalDeliveries   Int      @default(0)
+  dailyDeliveries   Int      @default(0)
+  weeklyDeliveries  Int      @default(0)
+  monthlyDeliveries Int      @default(0)
+  totalEarnings     Float    @default(0)
+  dailyEarnings     Float    @default(0)
+  weeklyEarnings    Float    @default(0)
+  monthlyEarnings   Float    @default(0)
+  lastResetDaily    DateTime @default(now())
+  lastResetWeekly   DateTime @default(now())
+  lastResetMonthly  DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  motorist          Motorist  @relation(fields: [motoristId], references: [id], onDelete: Cascade)
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  startDeliveries Delivery[] @relation("StartLocation")
+  endDeliveries   Delivery[] @relation("EndLocation")
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  description String?
+  weight      Float    
+  dimensions  String?  
+  isFragile   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  delivery    Delivery?
+}
+
+model Delivery {
+  id                String         @id @default(cuid())
+  customerId        String
+  motoristId        String?
+  packageId         String         @unique
+  startLocationId   String
+  endLocationId     String
+  status            DeliveryStatus @default(PENDING)
+  distance          Float          
+  fee               Float          
+  startTime         DateTime?
+  endTime           DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  customer          Customer       @relation(fields: [customerId], references: [id])
+  motorist          Motorist?      @relation(fields: [motoristId], references: [id])
+  package           Package        @relation(fields: [packageId], references: [id])
+  startLocation     Location       @relation("StartLocation", fields: [startLocationId], references: [id])
+  endLocation       Location       @relation("EndLocation", fields: [endLocationId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  MOTORIST
+  CUSTOMER
+}
+
+enum DeliveryStatus {
+  PENDING
+  ASSIGNED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
