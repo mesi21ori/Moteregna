@@ -9,11 +9,10 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "gender" TEXT,
     "birthdate" TIMESTAMP(3),
-    "phone" TEXT,
     "address" TEXT,
     "role" "Role" NOT NULL DEFAULT 'MOTORIST',
     "profile" TEXT,
@@ -27,9 +26,7 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Customer" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "phone" TEXT,
-    "address" TEXT,
+    "phonenumber" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -44,6 +41,7 @@ CREATE TABLE "Motorist" (
     "vehicleModel" TEXT NOT NULL,
     "vehiclePlateNumber" TEXT NOT NULL,
     "isAvailable" BOOLEAN NOT NULL DEFAULT true,
+    "isOnline" BOOLEAN NOT NULL DEFAULT false,
     "currentLocation" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -86,29 +84,15 @@ CREATE TABLE "Location" (
 );
 
 -- CreateTable
-CREATE TABLE "Package" (
-    "id" TEXT NOT NULL,
-    "description" TEXT,
-    "weight" DOUBLE PRECISION NOT NULL,
-    "dimensions" TEXT,
-    "isFragile" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Package_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Delivery" (
     "id" TEXT NOT NULL,
-    "customerId" TEXT NOT NULL,
     "motoristId" TEXT,
-    "packageId" TEXT NOT NULL,
+    "customerId" TEXT,
     "startLocationId" TEXT NOT NULL,
     "endLocationId" TEXT NOT NULL,
     "status" "DeliveryStatus" NOT NULL DEFAULT 'PENDING',
-    "distance" DOUBLE PRECISION NOT NULL,
-    "fee" DOUBLE PRECISION NOT NULL,
+    "distance" DOUBLE PRECISION,
+    "fee" DOUBLE PRECISION,
     "startTime" TIMESTAMP(3),
     "endTime" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -117,23 +101,30 @@ CREATE TABLE "Delivery" (
     CONSTRAINT "Delivery_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Price" (
+    "id" TEXT NOT NULL,
+    "initialPrice" DOUBLE PRECISION NOT NULL DEFAULT 100,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Price_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_profile_key" ON "User"("profile");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Customer_phonenumber_key" ON "Customer"("phonenumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Motorist_licenseNumber_key" ON "Motorist"("licenseNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "MotoristStatistics_motoristId_key" ON "MotoristStatistics"("motoristId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Delivery_packageId_key" ON "Delivery"("packageId");
-
--- AddForeignKey
-ALTER TABLE "Customer" ADD CONSTRAINT "Customer_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Motorist" ADD CONSTRAINT "Motorist_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -142,13 +133,10 @@ ALTER TABLE "Motorist" ADD CONSTRAINT "Motorist_userId_fkey" FOREIGN KEY ("userI
 ALTER TABLE "MotoristStatistics" ADD CONSTRAINT "MotoristStatistics_motoristId_fkey" FOREIGN KEY ("motoristId") REFERENCES "Motorist"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Delivery" ADD CONSTRAINT "Delivery_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Delivery" ADD CONSTRAINT "Delivery_motoristId_fkey" FOREIGN KEY ("motoristId") REFERENCES "Motorist"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Delivery" ADD CONSTRAINT "Delivery_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "Package"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Delivery" ADD CONSTRAINT "Delivery_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Delivery" ADD CONSTRAINT "Delivery_startLocationId_fkey" FOREIGN KEY ("startLocationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
