@@ -61,6 +61,7 @@ export default async function handler(req, res) {
     const weeklyDeliveries = await prisma.delivery.findMany({
       where: {
         motoristId,
+        status: 'DELIVERED', 
         createdAt: {
           gte: startOfWeek, 
           lte: endOfWeek, 

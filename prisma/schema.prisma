@@ -75,7 +75,7 @@ model Delivery {
   motoristId        String?
   customerId        String?       
   startLocationId   String
-  endLocationId     String
+  endLocationId     String?     
   status            DeliveryStatus @default(PENDING)
   distance          Float?        
   fee               Float?         
@@ -87,12 +87,12 @@ model Delivery {
   motorist          Motorist?      @relation(fields: [motoristId], references: [id])
   customer          Customer?      @relation(fields: [customerId], references: [id], name: "CustomerDeliveries")
   startLocation     Location       @relation("StartLocation", fields: [startLocationId], references: [id])
-  endLocation       Location       @relation("EndLocation", fields: [endLocationId], references: [id])
+  endLocation       Location?       @relation("EndLocation", fields: [endLocationId], references: [id])
 }
 
 model Price {
   id           String  @id @default(cuid())
-  initialPrice Float   @default(100) 
+  initialPrice Float   @default(100)   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
