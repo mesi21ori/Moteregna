@@ -56,14 +56,18 @@ export default async function handler(req, res) {
 
       const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-      const driversLicencephotoBackPath = req.files['driversLicencephotoBack']
-        ? `/uploads/${req.files['driversLicencephotoBack'][0].filename}`
+      const Librephotopath = req.files['Librephoto']
+        ? `/uploads/${req.files['Librephoto'][0].filename}`
         : null;
-      const driversLicencephotoFrontPath = req.files['driversLicencephotoFront']
+      const driversLicencephotoFrontPath = req.
+      files['driversLicencephotoFront']
         ? `/uploads/${req.files['driversLicencephotoFront'][0].filename}`
         : null;
       const profilePath = req.files['profile']
         ? `/uploads/${req.files['profile'][0].filename}`
+        : null;
+      const businessPermitPath = req.files['businessPermit']
+        ? `/uploads/${req.files['businessPermit'][0].filename}`
         : null;
 
       const newUser = await prisma.user.create({
@@ -87,8 +91,9 @@ export default async function handler(req, res) {
           licenseNumber: validatedData.licenseNumber,
           vehicleModel: validatedData.vehicleModel,
           vehiclePlateNumber: validatedData.vehiclePlateNumber,
-          driversLicencephotoBack: driversLicencephotoBackPath,
+          Librephoto: Librephotopath,
           driversLicencephotoFront: driversLicencephotoFrontPath,
+          businessPermit:businessPermitPath,
         },
       });
 

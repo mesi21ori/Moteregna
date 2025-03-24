@@ -43,8 +43,9 @@ model Motorist {
   licenseNumber     String   @unique
   vehicleModel      String
   vehiclePlateNumber String
-  driversLicencephotoBack  String
+  Librephoto         String
   driversLicencephotoFront String
+  businessPermit String
   isAvailable       Boolean  @default(true)
   isOnline          Boolean  @default(false)
   currentLocation   String?
