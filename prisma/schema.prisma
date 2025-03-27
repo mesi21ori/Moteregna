@@ -24,8 +24,10 @@ model User {
   sessionId   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  status      Boolean   @default(true)
 
   motorists   Motorist[] @relation("UserMotorists")
+  prices      Price[]    @relation("UserPrices")
 }
 
 model Customer {
@@ -92,13 +94,19 @@ model Delivery {
 }
 
 model Price {
-  id           String  @id @default(cuid())
-  initialPrice Float   @default(100)   
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String  
+  initialPrice  Float    @default(100)   
+  perkilometer  Float    @default(1.2)  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserPrices")
 }
 
+
 enum Role {
+  SUPERADMIN
   ADMIN
   MOTORIST
   CUSTOMER

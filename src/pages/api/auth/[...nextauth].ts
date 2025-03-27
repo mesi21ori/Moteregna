@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { Phone } from 'lucide-react';
 
 const prisma = new PrismaClient();
 
@@ -10,14 +11,18 @@ export default NextAuth({
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        Phone: { label: 'Phone', type: 'Phonenumber' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const { email, password } = credentials;
+        if (!credentials) {
+          return null;
+        }
+        const phone = credentials.Phone;
+        const password = credentials.password;
 
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { phone },
         });
 
         if (!user) {
@@ -31,10 +36,11 @@ export default NextAuth({
 
         return {
           id: user.id,
-          email: user.email,
+          email: user.phone,
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
+          profile: user.profile || '', 
         };
       },
     }),

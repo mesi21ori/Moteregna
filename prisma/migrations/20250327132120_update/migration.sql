@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Price" ALTER COLUMN "userId" DROP DEFAULT;
+
+-- AddForeignKey
+ALTER TABLE "Price" ADD CONSTRAINT "Price_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

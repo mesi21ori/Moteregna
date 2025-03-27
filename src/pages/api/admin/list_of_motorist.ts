@@ -4,10 +4,10 @@ import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 
-const validateAdminToken = (token: string): { userId: string; role: string } | null => {
+const validateToken = (token: string): { userId: string; role: string } | null => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { userId: string; role: string };
-    return decoded.role === 'ADMIN' ? decoded : null;
+    return decoded;
   } catch (error) {
     return null;
   }
@@ -19,14 +19,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-  
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.session_token;
     if (!token) return res.status(401).json({ message: 'Unauthorized' });
     
-    const decoded = validateAdminToken(token);
+    const decoded = validateToken(token);
     if (!decoded) return res.status(403).json({ message: 'Forbidden' });
 
-   
+    if (!['ADMIN', 'SUPERADMIN'].includes(decoded.role)) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient privileges' });
+    }
+
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -77,23 +79,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return {
         id: motorist.id,
-        firstName: motorist.user.firstName,
-        middleName: motorist.user.middleName,
-        lastName: motorist.user.lastName,
+        name: `${motorist.user.firstName} ${motorist.user.lastName}`,
         phone: motorist.user.phone,
-        gender: motorist.user.gender,
-        address: motorist.user.address,
-        birthdate: motorist.user.birthdate,
         licenseNumber: motorist.licenseNumber,
-        vehicleModel: motorist.vehicleModel,
-        vehiclePlateNumber: motorist.vehiclePlateNumber,
-        driversLicencephotoBack: motorist.Librephoto,
-        driversLicencephotoFront: motorist.driversLicencephotoFront,
-        isAvailable: motorist.isAvailable,
-        isOnline: motorist.isOnline,
+        vehicle: `${motorist.vehicleModel} (${motorist.vehiclePlateNumber})`,
+        status: motorist.isAvailable ? 'Available' : 'Unavailable',
+        onlineStatus: motorist.isOnline ? 'Online' : 'Offline',
         totalDeliveries,
-        totalDistance,
-        createdAt: motorist.createdAt,
+        totalDistance: `${totalDistance.toFixed(2)} km`,
+        joinedDate: motorist.createdAt.toISOString().split('T')[0],
       };
     });
 
@@ -110,5 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  } finally {
+    await prisma.$disconnect();
   }
 }
