@@ -12,9 +12,10 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage }).fields([
-  { name: 'driversLicencephotoBack', maxCount: 1 },
+  { name: 'Librephoto', maxCount: 1 },
   { name: 'driversLicencephotoFront', maxCount: 1 },
-  { name: 'profile', maxCount: 1 }
+  { name: 'profile', maxCount: 1 },
+  { name: 'businessPermit', maxCount: 1 }
 ]);
 
 export default upload;
