@@ -91,9 +91,9 @@ export default async function handler(req, res) {
           licenseNumber: validatedData.licenseNumber,
           vehicleModel: validatedData.vehicleModel,
           vehiclePlateNumber: validatedData.vehiclePlateNumber,
-          Librephoto: Librephotopath,
-          driversLicencephotoFront: driversLicencephotoFrontPath,
-          businessPermit:businessPermitPath,
+          Librephoto: Librephotopath!,
+          driversLicencephotoFront: driversLicencephotoFrontPath!,
+          businessPermit:businessPermitPath!,
         },
       });
 

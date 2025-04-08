@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       }
 
       const motorist = await prisma.motorist.findUnique({
-        where: { id: delivery.motoristId },
+        where: { id: delivery.motoristId! },
       });
 
       if (!motorist || motorist.userId !== decoded.userId) {
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       });
 
       await prisma.motorist.update({
-        where: { id: delivery.motoristId },
+        where: { id: delivery.motoristId! },
         data: { isAvailable: true },
       });
 
@@ -94,7 +94,10 @@ export default async function handler(req, res) {
         return res.status(401).json({ message: 'Unauthorized: Invalid token' });
       }
 
-      res.status(500).json({ message: 'Failed to cancel delivery', error: error.message });
+      res.status(500).json({ 
+        message: 'Failed to cancel delivery', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   }
 

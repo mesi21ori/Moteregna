@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     }
 
     await prisma.motorist.update({
-      where: { id: delivery.motoristId },
+      where: { id: delivery.motoristId! },
       data: { isAvailable },
     });
 

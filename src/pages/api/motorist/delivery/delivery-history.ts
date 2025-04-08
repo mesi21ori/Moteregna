@@ -72,16 +72,16 @@ export default async function handler(req, res) {
     const formattedDeliveries = deliveries.map((delivery) => ({
       totalDistance: delivery.distance,
       source: delivery.startLocation.name,
-      destination: delivery.endLocation.name,
+      destination: delivery.endLocation!.name,
       totalCost: delivery.fee,
       status: delivery.status,
       sourceLat: delivery.startLocation.latitude,
       sourceLong: delivery.startLocation.longitude,
-      destinationLat: delivery.endLocation.latitude,
-      destinationLong: delivery.endLocation.longitude,
+      destinationLat: delivery.endLocation!.latitude,
+      destinationLong: delivery.endLocation!.longitude,
       startTime: delivery.startTime ? delivery.startTime.toISOString() : null, 
       endTime: delivery.endTime ? delivery.endTime.toISOString() : null, 
-      customerPhone: delivery.customer.phonenumber, 
+      customerPhone: delivery.customer!.phonenumber, 
     }));
 
     res.status(200).json(formattedDeliveries);

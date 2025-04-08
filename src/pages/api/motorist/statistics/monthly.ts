@@ -75,8 +75,8 @@ export default async function handler(req, res) {
     });
 
    
-    const totalDistance = monthlyDeliveries.reduce((sum, delivery) => sum + delivery.distance, 0);
-    const totalEarning = monthlyDeliveries.reduce((sum, delivery) => sum + delivery.fee, 0);
+    const totalDistance = monthlyDeliveries.reduce((sum, delivery) => sum + delivery.distance!, 0);
+    const totalEarning = monthlyDeliveries.reduce((sum, delivery) => sum + delivery.fee!, 0);
     const deliveryCount = monthlyDeliveries.length;
 
    
