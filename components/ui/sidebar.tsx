@@ -119,7 +119,7 @@ const SidebarProvider = React.forwardRef<
             } as React.CSSProperties
           }
           className={cn("group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar", className)}
-          ref={ref as React.Ref<HTMLDivElement>}
+          ref={ref}
           {...props}
         >
           {children}
@@ -144,7 +144,7 @@ const Sidebar = React.forwardRef<
     return (
       <div
         className={cn("flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground", className)}
-        ref={ref as React.Ref<HTMLDivElement>}
+        ref={ref}
         {...props}
       >
         {children}
@@ -174,7 +174,7 @@ const Sidebar = React.forwardRef<
 
   return (
     <div
-      ref={ref as React.Ref<HTMLDivElement>}
+      ref={ref}
       className="group peer hidden md:block text-sidebar-foreground"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
@@ -224,7 +224,7 @@ const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.C
 
     return (
       <Button
-        ref={ref as React.Ref<HTMLDivElement>}
+        ref={ref}
         data-sidebar="trigger"
         variant="ghost"
         size="icon"

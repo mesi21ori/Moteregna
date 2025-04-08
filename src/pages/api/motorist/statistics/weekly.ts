@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken'; 
-import { NextApiRequest, NextApiResponse } from 'next/types';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-  
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.session_token;
 
     if (!token) {
@@ -62,27 +61,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const weeklyDeliveries = await prisma.delivery.findMany({
       where: {
         motoristId,
-        status: 'DELIVERED', 
+        status: 'DELIVERED',
+        distance: { not: null },
+        fee: { not: null },
         createdAt: {
-          gte: startOfWeek, 
-          lte: endOfWeek, 
+          gte: startOfWeek,
+          lte: endOfWeek,
         },
       },
     });
 
-<<<<<<< HEAD
-    const totalDistance = weeklyDeliveries.reduce((sum, delivery) => sum + (delivery.distance ?? 0), 0);
-    const totalEarning = weeklyDeliveries.reduce((sum, delivery) => sum + ( delivery.fee ?? 0), 0);
-=======
-    const totalDistance = weeklyDeliveries.reduce((sum, delivery) => sum + delivery.distance!, 0);
-    const totalEarning = weeklyDeliveries.reduce((sum, delivery) => sum + delivery.fee!, 0);
->>>>>>> 4a89896c59c857c211774feff6af57c0819d3a2d
+    const totalDistance = weeklyDeliveries.reduce(
+      (sum, delivery) => sum + (delivery.distance ?? 0), 
+      0
+    );
+    
+    const totalEarning = weeklyDeliveries.reduce(
+      (sum, delivery) => sum + (delivery.fee ?? 0), 
+      0
+    );
+    
     const deliveryCount = weeklyDeliveries.length;
 
     res.status(200).json({
       totalDistance,
       totalEarning,
-      delivery: deliveryCount,
+      deliveryCount,  // Changed from 'delivery' to be more descriptive
     });
   } catch (error) {
     console.error('Error fetching weekly motorist statistics:', error);
@@ -95,6 +99,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ 
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }

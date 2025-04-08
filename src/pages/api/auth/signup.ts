@@ -39,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const validatedData = signupSchema.parse(req.body);
 
+      // Check for existing user with the same phone number
       const existingUser = await prisma.user.findUnique({
         where: { phone: validatedData.phone },
       });
@@ -47,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'Phone number already registered' });
       }
 
+      // Check for existing motorist with the same license number
       const existingMotorist = await prisma.motorist.findUnique({
         where: { licenseNumber: validatedData.licenseNumber },
       });
@@ -55,21 +57,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'License number already registered' });
       }
 
+      // Hash the password
       const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-      const Librephotopath = req.files?.['Librephoto']
-        ? `/uploads/${req.files['Librephoto'][0].filename}`
-        : null;
-      const driversLicencephotoFrontPath = req.files?.['driversLicencephotoFront']
-        ? `/uploads/${req.files['driversLicencephotoFront'][0].filename}`
-        : null;
-      const profilePath = req.files?.['profile']
-        ? `/uploads/${req.files['profile'][0].filename}`
-        : null;
-      const businessPermitPath = req.files?.['businessPermit']
-        ? `/uploads/${req.files['businessPermit'][0].filename}`
-        : null;
+      // Process uploaded files
+      const filePaths = {
+        librePhoto: req.files?.['Librephoto']?.[0]?.filename 
+          ? `/uploads/${req.files['Librephoto'][0].filename}` 
+          : null,
+        driversLicenseFront: req.files?.['driversLicencephotoFront']?.[0]?.filename
+          ? `/uploads/${req.files['driversLicencephotoFront'][0].filename}`
+          : null,
+        profilePhoto: req.files?.['profile']?.[0]?.filename
+          ? `/uploads/${req.files['profile'][0].filename}`
+          : null,
+        businessPermit: req.files?.['businessPermit']?.[0]?.filename
+          ? `/uploads/${req.files['businessPermit'][0].filename}`
+          : null,
+      };
 
+      // Create user first
       const newUser = await prisma.user.create({
         data: {
           firstName: validatedData.firstName,
@@ -80,42 +87,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           gender: validatedData.gender,
           birthdate: validatedData.birthdate ? new Date(validatedData.birthdate) : null,
           address: validatedData.address,
-          profile: profilePath,
+          profile: filePaths.profilePhoto,
           role: 'MOTORIST',
         },
       });
 
+      // Create motorist with the newly created user's ID
       const newMotorist = await prisma.motorist.create({
         data: {
           userId: newUser.id,
           licenseNumber: validatedData.licenseNumber,
           vehicleModel: validatedData.vehicleModel,
           vehiclePlateNumber: validatedData.vehiclePlateNumber,
-<<<<<<< HEAD
-          Librephoto: Librephotopath || '',
-          driversLicencephotoFront: driversLicencephotoFrontPath || '',
-          businessPermit: businessPermitPath || '',
-=======
-          Librephoto: Librephotopath!,
-          driversLicencephotoFront: driversLicencephotoFrontPath!,
-          businessPermit:businessPermitPath!,
->>>>>>> 4a89896c59c857c211774feff6af57c0819d3a2d
+          Librephoto: filePaths.librePhoto || '',
+          driversLicencephotoFront: filePaths.driversLicenseFront || '',
+          businessPermit: filePaths.businessPermit || '',
         },
       });
 
-      res.status(201).json({
-        message: 'Motorist registered successfully',
-        user: { id: newUser.id, phone: newUser.phone, role: newUser.role },
-        motorist: { id: newMotorist.id, licenseNumber: newMotorist.licenseNumber },
+      // Update motorist with user ID
+      await prisma.motorist.update({
+        where: { id: newMotorist.id },
+        data: { userId: newUser.id },
       });
+
+      return res.status(201).json({
+        message: 'Motorist registered successfully',
+        user: { 
+          id: newUser.id, 
+          phone: newUser.phone, 
+          role: newUser.role 
+        },
+        motorist: { 
+          id: newMotorist.id, 
+          licenseNumber: newMotorist.licenseNumber 
+        },
+      });
+
     } catch (error) {
       console.error('Error during motorist registration:', error);
 
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Validation failed', errors: error.errors });
+        return res.status(400).json({ 
+          message: 'Validation failed', 
+          errors: error.errors 
+        });
       }
 
-      res.status(500).json({ message: 'Internal server error' });
+      return res.status(500).json({ 
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 }
