@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +26,7 @@ const validateToken = (token: string): { userId: string } | null => {
   }
 };
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -50,6 +51,10 @@ export default async function handler(req, res) {
 
     if (!delivery) {
       return res.status(404).json({ message: 'Delivery not found' });
+    }
+
+    if (!delivery.motoristId) {
+      return res.status(400).json({ message: 'Delivery has no assigned motorist' });
     }
 
     if (delivery.status === "DELIVERED" || delivery.status === "CANCELLED") {

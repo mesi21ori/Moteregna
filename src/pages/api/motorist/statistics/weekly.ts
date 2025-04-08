@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken'; 
+import { NextApiRequest, NextApiResponse } from 'next/types';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,7 @@ const validateToken = (token: string): { userId: string } | null => {
   }
 };
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -69,8 +70,8 @@ export default async function handler(req, res) {
       },
     });
 
-    const totalDistance = weeklyDeliveries.reduce((sum, delivery) => sum + delivery.distance, 0);
-    const totalEarning = weeklyDeliveries.reduce((sum, delivery) => sum + delivery.fee, 0);
+    const totalDistance = weeklyDeliveries.reduce((sum, delivery) => sum + (delivery.distance ?? 0), 0);
+    const totalEarning = weeklyDeliveries.reduce((sum, delivery) => sum + ( delivery.fee ?? 0), 0);
     const deliveryCount = weeklyDeliveries.length;
 
     res.status(200).json({

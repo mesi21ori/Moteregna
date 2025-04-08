@@ -1,8 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { serialize } from 'cookie';
+import { authenticate, AuthenticatedRequest } from 'lib/auth';
 import { NextApiResponse } from 'next';
-import { authenticate } from '../../../../lib/auth';
-import { AuthenticatedRequest } from '../../../type/types'; 
 
 const prisma = new PrismaClient();
 
@@ -32,6 +31,7 @@ export default authenticate(async function handler(req: AuthenticatedRequest, re
     res.status(200).json({ message: 'Logout successful' });
   } catch (error) {
     console.error('Error during logout:', error);
-    res.status(500).json({ message: 'Internal server error', details: error.message });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ message: 'Internal server error', details: errorMessage });
   }
 });

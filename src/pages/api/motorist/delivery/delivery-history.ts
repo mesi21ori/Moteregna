@@ -1,18 +1,38 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import jwt from 'jsonwebtoken'; 
+import jwt from 'jsonwebtoken';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 const prisma = new PrismaClient();
 
 const querySchema = z.object({
   motoristId: z.string().min(1, "Motorist ID is required"),
-  page: z.string().min(1, "Page number is required").transform(Number), 
-  data: z.string().min(1, "Data per page is required").transform(Number), 
+  page: z.string().min(1, "Page number is required").transform(Number),
+  data: z.string().min(1, "Data per page is required").transform(Number),
 });
 
-const validateToken = (token: string): { userId: string } | null => {
+interface DecodedToken {
+  userId: string;
+}
+
+interface FormattedDelivery {
+  totalDistance: number | null;
+  source: string;
+  destination: string | null;
+  totalCost: number | null;
+  status: string;
+  sourceLat: number;
+  sourceLong: number;
+  destinationLat: number | null;
+  destinationLong: number | null;
+  startTime: string | null;
+  endTime: string | null;
+  customerPhone: string | null;
+}
+
+const validateToken = (token: string): DecodedToken | null => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { userId: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as DecodedToken;
     return decoded;
   } catch (error) {
     console.error('Token validation failed:', error);
@@ -20,13 +40,12 @@ const validateToken = (token: string): { userId: string } | null => {
   }
 };
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.session_token;
 
     if (!token) {
@@ -54,34 +73,34 @@ export default async function handler(req, res) {
       return res.status(403).json({ message: 'Forbidden: You do not have permission to access this motorist' });
     }
 
-    const skip = (page - 1) * data; 
-    const take = data; 
+    const skip = (page - 1) * data;
+    const take = data;
 
     const deliveries = await prisma.delivery.findMany({
-      where: { motoristId }, 
-      skip, 
-      take, 
+      where: { motoristId },
+      skip,
+      take,
       include: {
-        startLocation: true, 
-        endLocation: true, 
-        customer: true, 
+        startLocation: true,
+        endLocation: true,
+        customer: true,
       },
-      orderBy: { createdAt: 'desc' }, 
+      orderBy: { createdAt: 'desc' },
     });
 
-    const formattedDeliveries = deliveries.map((delivery) => ({
+    const formattedDeliveries: FormattedDelivery[] = deliveries.map((delivery) => ({
       totalDistance: delivery.distance,
       source: delivery.startLocation.name,
-      destination: delivery.endLocation.name,
+      destination: delivery.endLocation?.name ?? null,
       totalCost: delivery.fee,
       status: delivery.status,
       sourceLat: delivery.startLocation.latitude,
       sourceLong: delivery.startLocation.longitude,
-      destinationLat: delivery.endLocation.latitude,
-      destinationLong: delivery.endLocation.longitude,
-      startTime: delivery.startTime ? delivery.startTime.toISOString() : null, 
-      endTime: delivery.endTime ? delivery.endTime.toISOString() : null, 
-      customerPhone: delivery.customer.phonenumber, 
+      destinationLat: delivery.endLocation?.latitude ?? null,
+      destinationLong: delivery.endLocation?.longitude ?? null,
+      startTime: delivery.startTime?.toISOString() ?? null,
+      endTime: delivery.endTime?.toISOString() ?? null,
+      customerPhone: delivery.customer?.phonenumber ?? null,
     }));
 
     res.status(200).json(formattedDeliveries);
@@ -96,6 +115,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
-    res.status(500).json({ message: 'Internal server error' });
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    res.status(500).json({ message: errorMessage });
   }
 }

@@ -109,7 +109,7 @@ function ChartTooltip<TValue extends ValueType, TName extends NameType>({
       {...props}
       content={({ active, payload, label }) => {
         if (React.isValidElement(children)) {
-          return React.cloneElement(children, {
+          return React.cloneElement(children as React.ReactElement<any>, {
             active,
             payload,
             label,

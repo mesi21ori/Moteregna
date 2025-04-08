@@ -1,7 +1,8 @@
+import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import upload from 'utils/uploadMiddleware';
 import { z } from 'zod';
-import upload from '../../../../utils/uploadMiddleware';
 
 const prisma = new PrismaClient();
 
@@ -25,12 +26,12 @@ export const config = {
   },
 };
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  upload(req, res, async (err) => {
+  upload(req as any, res as any, async (err) => {
     if (err) {
       return res.status(400).json({ message: 'File upload error', error: err });
     }
@@ -56,17 +57,16 @@ export default async function handler(req, res) {
 
       const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-      const Librephotopath = req.files['Librephoto']
+      const Librephotopath = req.files?.['Librephoto']
         ? `/uploads/${req.files['Librephoto'][0].filename}`
         : null;
-      const driversLicencephotoFrontPath = req.
-      files['driversLicencephotoFront']
+      const driversLicencephotoFrontPath = req.files?.['driversLicencephotoFront']
         ? `/uploads/${req.files['driversLicencephotoFront'][0].filename}`
         : null;
-      const profilePath = req.files['profile']
+      const profilePath = req.files?.['profile']
         ? `/uploads/${req.files['profile'][0].filename}`
         : null;
-      const businessPermitPath = req.files['businessPermit']
+      const businessPermitPath = req.files?.['businessPermit']
         ? `/uploads/${req.files['businessPermit'][0].filename}`
         : null;
 
@@ -91,9 +91,9 @@ export default async function handler(req, res) {
           licenseNumber: validatedData.licenseNumber,
           vehicleModel: validatedData.vehicleModel,
           vehiclePlateNumber: validatedData.vehiclePlateNumber,
-          Librephoto: Librephotopath,
-          driversLicencephotoFront: driversLicencephotoFrontPath,
-          businessPermit:businessPermitPath,
+          Librephoto: Librephotopath || '',
+          driversLicencephotoFront: driversLicencephotoFrontPath || '',
+          businessPermit: businessPermitPath || '',
         },
       });
 

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 const prisma = new PrismaClient();
 
@@ -9,10 +10,13 @@ const cancelDeliverySchema = z.object({
   status: z.literal("CANCELLED"), 
 });
 
+interface DecodedToken {
+  userId: string;
+}
 
-const validateToken = (token: string): { userId: string } | null => {
+const validateToken = (token: string): DecodedToken | null => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as { userId: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as DecodedToken;
     return decoded;
   } catch (error) {
     console.error('Token validation failed:', error);
@@ -20,8 +24,7 @@ const validateToken = (token: string): { userId: string } | null => {
   }
 };
 
-export default async function handler(req, res) {
-
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'PATCH') {
     try {
       const token = req.headers.authorization?.split(' ')[1] || req.cookies.session_token;
@@ -35,7 +38,6 @@ export default async function handler(req, res) {
         return res.status(401).json({ message: 'Unauthorized: Invalid token' });
       }
 
-
       const { deliveryId } = cancelDeliverySchema.parse(req.body);
 
       const delivery = await prisma.delivery.findUnique({
@@ -48,6 +50,10 @@ export default async function handler(req, res) {
 
       if (!delivery) {
         return res.status(404).json({ message: 'Delivery not found' });
+      }
+
+      if (!delivery.motoristId) {
+        return res.status(400).json({ message: 'Delivery has no assigned motorist' });
       }
 
       const motorist = await prisma.motorist.findUnique({
@@ -94,11 +100,14 @@ export default async function handler(req, res) {
         return res.status(401).json({ message: 'Unauthorized: Invalid token' });
       }
 
-      res.status(500).json({ message: 'Failed to cancel delivery', error: error.message });
-    }
-  }
+      let errorMessage = 'Failed to cancel delivery';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
 
-  else {
+      res.status(500).json({ message: errorMessage });
+    }
+  } else {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 }
