@@ -4,6 +4,7 @@
     "module": "ESNext", // Next.js works best with this
     "moduleResolution": "bundler", // Next.js 13+ recommended
     "esModuleInterop": true,
+    "noImplicitAny": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowJs": true,

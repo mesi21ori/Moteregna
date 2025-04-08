@@ -91,16 +91,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const formattedDeliveries: FormattedDelivery[] = deliveries.map((delivery) => ({
       totalDistance: delivery.distance,
       source: delivery.startLocation.name,
+<<<<<<< HEAD
       destination: delivery.endLocation?.name ?? null,
+=======
+      destination: delivery.endLocation!.name,
+>>>>>>> 4a89896c59c857c211774feff6af57c0819d3a2d
       totalCost: delivery.fee,
       status: delivery.status,
       sourceLat: delivery.startLocation.latitude,
       sourceLong: delivery.startLocation.longitude,
+<<<<<<< HEAD
       destinationLat: delivery.endLocation?.latitude ?? null,
       destinationLong: delivery.endLocation?.longitude ?? null,
       startTime: delivery.startTime?.toISOString() ?? null,
       endTime: delivery.endTime?.toISOString() ?? null,
       customerPhone: delivery.customer?.phonenumber ?? null,
+=======
+      destinationLat: delivery.endLocation!.latitude,
+      destinationLong: delivery.endLocation!.longitude,
+      startTime: delivery.startTime ? delivery.startTime.toISOString() : null, 
+      endTime: delivery.endTime ? delivery.endTime.toISOString() : null, 
+      customerPhone: delivery.customer!.phonenumber, 
+>>>>>>> 4a89896c59c857c211774feff6af57c0819d3a2d
     }));
 
     res.status(200).json(formattedDeliveries);

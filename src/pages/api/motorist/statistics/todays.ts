@@ -70,8 +70,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
+<<<<<<< HEAD
     const totalDistance = todayDeliveries.reduce((sum, delivery) => sum + (delivery.distance ?? 0), 0);
     const totalEarning = todayDeliveries.reduce((sum, delivery) => sum + (delivery.fee ?? 0), 0);
+=======
+    const totalDistance = todayDeliveries.reduce((sum, delivery) => sum + delivery.distance!, 0);
+    const totalEarning = todayDeliveries.reduce((sum, delivery) => sum + delivery.fee!, 0);
+>>>>>>> 4a89896c59c857c211774feff6af57c0819d3a2d
     const deliveryCount = todayDeliveries.length;
 
     res.status(200).json({

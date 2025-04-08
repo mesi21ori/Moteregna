@@ -91,9 +91,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           licenseNumber: validatedData.licenseNumber,
           vehicleModel: validatedData.vehicleModel,
           vehiclePlateNumber: validatedData.vehiclePlateNumber,
+<<<<<<< HEAD
           Librephoto: Librephotopath || '',
           driversLicencephotoFront: driversLicencephotoFrontPath || '',
           businessPermit: businessPermitPath || '',
+=======
+          Librephoto: Librephotopath!,
+          driversLicencephotoFront: driversLicencephotoFrontPath!,
+          businessPermit:businessPermitPath!,
+>>>>>>> 4a89896c59c857c211774feff6af57c0819d3a2d
         },
       });
 
