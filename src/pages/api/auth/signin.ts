@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const validatedData = signinSchema.parse(req.body);
-
+    
     const user = await prisma.user.findUnique({
       where: { phone: validatedData.phone },
     });
@@ -49,7 +49,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: { isLoggedIn: true, sessionId }, 
     });
 
-
+    const motorist = await prisma.motorist.findFirst({
+      where: { userId: user.id }
+    });
     const token = jwt.sign(
       { userId: user.id, phone: user.phone, role: user.role, sessionId },
       process.env.JWT_SECRET_KEY!,
@@ -72,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: 'Sign-in successful',
       data: userWithoutPassword,
       accessToken: token,
+      motorist: motorist
     });
   } catch (error) {
     console.error('Error during sign-in:', error);
