@@ -9,6 +9,7 @@
 
 # production
 /build
+/public
 .env
 yarn.lock
 # debug

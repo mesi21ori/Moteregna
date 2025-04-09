@@ -32,8 +32,7 @@ interface FormattedDelivery {
 
 const validateToken = (token: string): DecodedToken | null => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as DecodedToken;
-    return decoded;
+    return jwt.verify(token, process.env.JWT_SECRET_KEY!) as DecodedToken;
   } catch (error) {
     console.error('Token validation failed:', error);
     return null;
@@ -46,8 +45,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // Authentication
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.session_token;
-
     if (!token) {
       return res.status(401).json({ message: 'Unauthorized: No token provided' });
     }
@@ -57,10 +56,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
+    // Validation
     const { motoristId, page, data } = querySchema.parse(req.query);
+    const skip = (page - 1) * data;
+    const take = data;
 
-    console.log(`Request received for motoristId: ${motoristId}, page: ${page}, data: ${data}`);
+    console.log(`Fetching deliveries for motorist: ${motoristId}, page: ${page}, per page: ${data}`);
 
+    // Authorization check
     const motorist = await prisma.motorist.findUnique({
       where: { id: motoristId },
     });
@@ -70,12 +73,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (motorist.userId !== decoded.userId) {
-      return res.status(403).json({ message: 'Forbidden: You do not have permission to access this motorist' });
+      return res.status(403).json({ 
+        message: 'Forbidden: You do not have permission to access this motorist' 
+      });
     }
 
-    const skip = (page - 1) * data;
-    const take = data;
-
+    // Fetch deliveries with pagination
     const deliveries = await prisma.delivery.findMany({
       where: { motoristId },
       skip,
@@ -88,6 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       orderBy: { createdAt: 'desc' },
     });
 
+    // Format the response data
     const formattedDeliveries: FormattedDelivery[] = deliveries.map((delivery) => ({
       totalDistance: delivery.distance,
       source: delivery.startLocation.name,
@@ -103,19 +107,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       customerPhone: delivery.customer?.phonenumber ?? null,
     }));
 
-    res.status(200).json(formattedDeliveries);
+    // Get total count for pagination metadata
+    const totalDeliveries = await prisma.delivery.count({
+      where: { motoristId },
+    });
+
+    return res.status(200).json({
+      data: formattedDeliveries,
+      pagination: {
+        currentPage: page,
+        itemsPerPage: data,
+        totalItems: totalDeliveries,
+        totalPages: Math.ceil(totalDeliveries / data),
+      }
+    });
+
   } catch (error) {
     console.error('Error fetching delivery history:', error);
 
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error.errors });
+      return res.status(400).json({ 
+        message: 'Validation failed', 
+        errors: error.errors.map(e => ({
+          path: e.path.join('.'),
+          message: e.message
+        })) 
+      });
     }
 
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    res.status(500).json({ message: errorMessage });
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' 
+        ? error instanceof Error ? error.message : 'Unknown error'
+        : undefined
+    });
   }
 }

@@ -1,14 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import jwt from 'jsonwebtoken'; 
+import jwt from 'jsonwebtoken';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 const prisma = new PrismaClient();
-
 
 const querySchema = z.object({
   motoristId: z.string().min(1, "Motorist ID is required"),
 });
-
 
 const validateToken = (token: string): { userId: string } | null => {
   try {
@@ -20,31 +19,35 @@ const validateToken = (token: string): { userId: string } | null => {
   }
 };
 
-export default async function handler(req, res) {
+function getMonthDateRange(): { start: Date; end: Date } {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  return { start, end };
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-
+    // Authentication
     const token = req.headers.authorization?.split(' ')[1] || req.cookies.session_token;
-
     if (!token) {
       return res.status(401).json({ message: 'Unauthorized: No token provided' });
     }
 
-   
     const decoded = validateToken(token);
     if (!decoded) {
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
-  
+    // Input validation
     const { motoristId } = querySchema.parse(req.query);
-
- 
     console.log(`Request received for motoristId: ${motoristId}`);
 
+    // Verify motorist exists and belongs to user
     const motorist = await prisma.motorist.findUnique({
       where: { id: motoristId },
     });
@@ -57,48 +60,59 @@ export default async function handler(req, res) {
       return res.status(403).json({ message: 'Forbidden: You do not have permission to access this motorist' });
     }
 
-    
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1); 
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); 
+    // Get monthly date range
+    const { start: startOfMonth, end: endOfMonth } = getMonthDateRange();
 
-    
+    // Fetch deliveries for the current month
     const monthlyDeliveries = await prisma.delivery.findMany({
       where: {
         motoristId,
-        status: 'DELIVERED', 
+        status: 'DELIVERED',
         createdAt: {
-          gte: startOfMonth, 
-          lte: endOfMonth, 
+          gte: startOfMonth,
+          lte: endOfMonth,
         },
+        distance: { not: null },
+        fee: { not: null },
       },
     });
 
-   
-    const totalDistance = monthlyDeliveries.reduce((sum, delivery) => sum + delivery.distance!, 0);
-    const totalEarning = monthlyDeliveries.reduce((sum, delivery) => sum + delivery.fee!, 0);
+    // Calculate statistics
+    const totalDistance = monthlyDeliveries.reduce(
+      (sum, delivery) => sum + (delivery.distance || 0),
+      0
+    );
+    
+    const totalEarning = monthlyDeliveries.reduce(
+      (sum, delivery) => sum + (delivery.fee || 0),
+      0
+    );
+    
     const deliveryCount = monthlyDeliveries.length;
 
-   
-    res.status(200).json({
+    return res.status(200).json({
       totalDistance,
       totalEarning,
-      delivery: deliveryCount,
+      deliveryCount,
+      month: startOfMonth.toLocaleString('default', { month: 'long', year: 'numeric' }),
     });
   } catch (error) {
     console.error('Error fetching monthly motorist statistics:', error);
 
-   
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: 'Validation failed', errors: error.errors });
+      return res.status(400).json({ 
+        message: 'Validation failed', 
+        errors: error.errors 
+      });
     }
-
 
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 
- 
-    res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }

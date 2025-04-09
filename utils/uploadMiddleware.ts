@@ -19,3 +19,4 @@ const upload = multer({ storage: storage }).fields([
 ]);
 
 export default upload;
+

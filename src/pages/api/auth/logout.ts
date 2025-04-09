@@ -1,24 +1,26 @@
 import { PrismaClient } from '@prisma/client';
 import { serialize } from 'cookie';
+import { authenticate, AuthenticatedRequest } from 'lib/auth';
 import { NextApiResponse } from 'next';
-import { authenticate } from '../../../../lib/auth';
-import { AuthenticatedRequest } from '../../../type/types';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
+export default authenticate(async function handler(
+  req: AuthenticatedRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    // Authentication middleware should set req.userId
-    const userId = req.userId; // Comes from session/token, NOT query params
+    const userId = req.userId;
     
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
+    // Update user's login status and clear session ID
     await prisma.user.update({
       where: { id: userId },
       data: { 
@@ -39,12 +41,12 @@ export default async function handler(req: AuthenticatedRequest, res: NextApiRes
       })
     );
 
-    res.status(200).json({ message: 'Logout successful' });
+    return res.status(200).json({ message: 'Logout successful' });
   } catch (error) {
     console.error('Error during logout:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       message: 'Internal server error',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
-}
+});
