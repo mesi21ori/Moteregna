@@ -1,4 +1,4 @@
-// File: C:\Users\malin\OneDrive\Desktop\new2\Moteregna\app\dashboard\motorists\page.tsx
+// File: C:\Users\hp\Desktop\gibemarket\Moteregna\new\Moteregna\app\dashboard\motorists\page.tsx
 import * as entry from '../../../../../app/dashboard/motorists/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

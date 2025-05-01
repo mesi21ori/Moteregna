@@ -68,7 +68,7 @@ export default function PricingPage() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load pricing data')
       if (error instanceof Error && error.message.includes('Unauthorized')) {
-        router.push('/sginin')
+        router.push('/signin')
       }
     } finally {
       setLoading(false)

@@ -1,4 +1,4 @@
-// File: C:\Users\malin\OneDrive\Desktop\new2\Moteregna\app\layout.tsx
+// File: C:\Users\hp\Desktop\gibemarket\Moteregna\new\Moteregna\app\layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

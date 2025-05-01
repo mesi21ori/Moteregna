@@ -61,8 +61,7 @@ export default function LoginPage() {
           <div className="inline-flex rounded-full bg-gradient-primary p-3 mb-3">
             <Package2 className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Sign in to access your admin panel</p>
+          <p className="text-muted-foreground mt-2">Sign in to access your panel</p>
         </div>
 
         <Card className="glass-card border-0 shadow-xl animate-slideInUp">

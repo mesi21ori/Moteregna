@@ -1,4 +1,6 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+
+type Role = 'USER' | 'ADMIN' | 'SUPERADMIN'; // Define Role type manually
 import type { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 

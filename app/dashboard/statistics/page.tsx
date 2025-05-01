@@ -124,7 +124,7 @@ export default function StatisticsPage() {
       setLocationDistributionData(data)
     } catch (error) {
       if (error instanceof Error && error.message.includes('Unauthorized')) {
-        router.push('/sginin')
+        router.push('/signin')
       }
       throw error
     }

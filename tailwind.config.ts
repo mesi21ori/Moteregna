@@ -1,14 +1,13 @@
 import type { Config } from "tailwindcss"
 
 const config = {
-  darkMode: "class", 
+  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
     "*.{js,ts,jsx,tsx,mdx}",
-    './app/**/*.{js,ts,jsx,tsx}'
   ],
   prefix: "",
   theme: {
@@ -54,6 +53,10 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        motergna: {
+          green: "#10b981",
+          red: "#f43f5e",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -73,6 +76,10 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      backgroundImage: {
+        "hero-pattern":
+          "linear-gradient(to bottom right, rgba(0,0,0,0.9), rgba(0,0,0,0.8)), url('/images/tire-tracks.png')",
       },
     },
   },
