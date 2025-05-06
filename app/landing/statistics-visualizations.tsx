@@ -26,7 +26,7 @@ export default function StatisticsVisualizations() {
     { name: "Maintenance Tips", value: 10 },
   ]
 
-  const COLORS = ["#10b981", "#f43f5e", "#3b82f6", "#f59e0b"]
+  const COLORS = ["#00A651", "#8C001A", "#3b82f6", "#f59e0b"]
 
   const usageData = [
     { name: "Mon", value: 420 },
@@ -83,11 +83,11 @@ export default function StatisticsVisualizations() {
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <defs>
                     <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+                      <stop offset="5%" stopColor="#00A651" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#00A651" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  <Area type="monotone" dataKey="users" stroke="#10b981" fillOpacity={1} fill="url(#colorUsers)" />
+                  <Area type="monotone" dataKey="users" stroke="#00A651" fillOpacity={1} fill="url(#colorUsers)" />
                 </AreaChart>
               </ChartContainer>
             </CardContent>
@@ -151,9 +151,9 @@ export default function StatisticsVisualizations() {
         <XAxis dataKey="name" />
         <YAxis />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="value" fill="#f43f5e" radius={[4, 4, 0, 0]}>
+        <Bar dataKey="value" fill="#00A651" radius={[4, 4, 0, 0]}>
           {usageData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={index === 5 || index === 6 ? "#10b981" : "#f43f5e"} />
+            <Cell key={`cell-${index}`} fill={index === 5 || index === 6 ? "#00A651" : "#8C001A"} />
           ))}
         </Bar>
       </BarChart>

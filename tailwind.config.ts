@@ -54,8 +54,8 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
         motergna: {
-          green: "#10b981",
-          red: "#f43f5e",
+          green: "#00A651",
+          red: "#8C001A",
         },
       },
       borderRadius: {
