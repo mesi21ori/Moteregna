@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "components/ui/button"
-import { Download } from "lucide-react"
+import { Download, Loader2 } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 
 export default function Hero() {
@@ -13,11 +13,56 @@ export default function Hero() {
   const motorcycleWidth = 880
   const color = "#00A651"
 
+  // Stats state
+  const [stats, setStats] = useState({
+    totalMotorists: 0,
+    customersServedToday: 0,
+    avgDailyCustomers: 0,
+    loading: true,
+    error: null as string | null,
+  })
+
+  // Fetch stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/getdata/hero-stats")
+
+        if (!response.ok) {
+          throw new Error(`Error fetching stats: ${response.statusText}`)
+        }
+
+        const result = await response.json()
+
+        if (result.success) {
+          setStats((prev) => ({
+            ...prev,
+            totalMotorists: result.data.totalMotorists,
+            customersServedToday: result.data.customersServedToday,
+            avgDailyCustomers: result.data.avgDailyCustomers,
+            loading: false,
+          }))
+        } else {
+          throw new Error(result.message || "Failed to fetch statistics")
+        }
+      } catch (err: any) {
+        console.error("Error fetching stats:", err)
+        setStats((prev) => ({
+          ...prev,
+          error: err.message || "An error occurred while fetching statistics",
+          loading: false,
+        }))
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  // Animation effect
   useEffect(() => {
     const animate = () => {
-      setPosition(prevPos => {
+      setPosition((prevPos) => {
         let newPos = prevPos + speed
-
 
         if (newPos > window.innerWidth - motorcycleWidth) {
           newPos = window.innerWidth - motorcycleWidth
@@ -42,32 +87,58 @@ export default function Hero() {
     }
   }, [hasArrived])
 
+  // Format numbers with commas
+  const formatNumber = (num: number) => {
+    return num.toLocaleString()
+  }
+
   return (
     <section
       ref={containerRef}
       className="relative py-20 md:py-32 overflow-hidden t-10"
       style={{
         height: "100vh",
-        background: "radial-gradient(circle at center, white 0%,rgb(224, 245, 235) 40%,rgb(206, 226, 216) 70%,rgb(167, 211, 196) 100%)",
+        background:
+          "radial-gradient(circle at center, white 0%,rgb(224, 245, 235) 40%,rgb(206, 226, 216) 70%,rgb(167, 211, 196) 100%)",
       }}
     >
       <div className="container relative z-20 mx-auto px-4 text-center">
-        <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
-          Join <span className="text-[#8C001A]">20,000+</span> Motorists Trusting MOTERGNA Daily!
+        <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 md:text-5xl lg:text-6xl mt-10">
+          {stats.loading ? (
+            <span className="inline-flex items-center">
+              Join <Loader2 className="ml-2 h-6 w-6 animate-spin" /> Motorists Trusting MOTERGNA Daily!
+            </span>
+          ) : (
+            <>
+              Join <span className="text-[#8C001A]">{formatNumber(stats.totalMotorists)}+</span> Motorists Trusting
+              MOTERGNA Daily!
+            </>
+          )}
         </h1>
         <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-600 md:text-xl">
-          Saving drivers time and money – <span className="text-[#00A651]">200+</span> customers served every day.
+          {stats.loading ? (
+            <span className="inline-flex items-center">
+              Saving drivers time and money – <Loader2 className="ml-2 h-5 w-5 animate-spin" /> customers served every
+              day.
+            </span>
+          ) : (
+            <>
+              Saving drivers time and money –{" "}
+              <span className="text-[#00A651]">{formatNumber(stats.avgDailyCustomers)}+</span> customers served every
+              day.
+            </>
+          )}
         </p>
         <div className="flex justify-center">
           <Button
             className="h-12 bg-[#8C001A] px-8 text-lg hover:bg-[#8C001A]/90"
             onClick={() => {
-              const link = document.createElement('a');
-              link.href = '/app/app-release.apk'; 
-              link.download = 'MoteregnaApp.apk'; 
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
+              const link = document.createElement("a")
+              link.href = "/app/app-release.apk"
+              link.download = "MoteregnaApp.apk"
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
             }}
           >
             <Download className="mr-2 h-5 w-5" /> Download Now
@@ -78,7 +149,7 @@ export default function Hero() {
             className="absolute top-0"
             style={{
               left: `${position}px`,
-              transition: 'left 0.7s linear',
+              transition: "left 0.7s linear",
             }}
           >
             <Motorcycle color={color} />

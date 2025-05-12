@@ -41,7 +41,7 @@ export default function PricingPage() {
     page: 1,
     limit: 10,
     total: 0,
-    totalPages: 1
+    totalPages: 1,
   })
 
   useEffect(() => {
@@ -54,21 +54,22 @@ export default function PricingPage() {
       const response = await fetch(
         `/api/prices/history?page=${pagination.page}&limit=${pagination.limit}&search=${searchTerm}`,
         {
-          credentials: 'include'
-        }
+          credentials: "include",
+        },
       )
 
       if (!response.ok) {
-        throw new Error('Failed to fetch pricing data')
+        throw new Error("Failed to fetch pricing data")
       }
 
       const { data, pagination: paginationData } = await response.json()
       setPrices(data)
       setPagination(paginationData)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to load pricing data')
-      if (error instanceof Error && error.message.includes('Unauthorized')) {
-        router.push('/signin')
+      console.error("Error fetching price history:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to load pricing data")
+      if (error instanceof Error && error.message.includes("Unauthorized")) {
+        router.push("/signin")
       }
     } finally {
       setLoading(false)
@@ -76,7 +77,7 @@ export default function PricingPage() {
   }
 
   const handlePageChange = (newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }))
+    setPagination((prev) => ({ ...prev, page: newPage }))
   }
 
   const handleEditClick = (price: Price) => {
@@ -90,33 +91,55 @@ export default function PricingPage() {
     if (!selectedPrice) return
 
     try {
-      const response = await fetch('/api/prices', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          basePrice: Number(newBasePrice),
-          perKmPrice: Number(newPerKmPrice)
-        }),
-      })
+      // If creating a new price
+      if (selectedPrice.id === "new") {
+        const response = await fetch("/api/prices/addnew", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            basePrice: Number(newBasePrice),
+            perKmPrice: Number(newPerKmPrice),
+          }),
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to update pricing')
+        if (!response.ok) {
+          throw new Error("Failed to create pricing")
+        }
+
+        toast.success("Pricing created successfully")
+      } else {
+        // If updating an existing price
+        const response = await fetch(`/api/prices/update?id=${selectedPrice.id}`, {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            basePrice: Number(newBasePrice),
+            perKmPrice: Number(newPerKmPrice),
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to update pricing")
+        }
+
+        toast.success("Pricing updated successfully")
       }
 
-      toast.success('Pricing updated successfully')
-      fetchPrices() 
+      // Refresh the price list after update
+      await fetchPrices()
       setEditDialogOpen(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update pricing')
+      toast.error(error instanceof Error ? error.message : "Failed to update pricing")
     }
   }
 
-  const filteredPrices = prices.filter((price) => 
-    price.updatedBy.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredPrices = prices.filter((price) => price.updatedBy.toLowerCase().includes(searchTerm.toLowerCase()))
 
   if (loading && prices.length === 0) {
     return (
@@ -138,7 +161,7 @@ export default function PricingPage() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value)
-              setPagination(prev => ({ ...prev, page: 1 }))
+              setPagination((prev) => ({ ...prev, page: 1 }))
             }}
           />
         </div>
@@ -169,14 +192,10 @@ export default function PricingPage() {
                       <TableCell>{price.basePrice.toFixed(2)} ETB</TableCell>
                       <TableCell>ETB {price.perKmPrice.toFixed(2)}/km</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {new Date(price.createdAt).toLocaleDateString()}
-                        </Badge>
+                        <Badge variant="outline">{new Date(price.createdAt).toLocaleDateString()}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {new Date(price.updatedAt).toLocaleDateString()}
-                        </Badge>
+                        <Badge variant="outline">{new Date(price.updatedAt).toLocaleDateString()}</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
@@ -185,11 +204,7 @@ export default function PricingPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleEditClick(price)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(price)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </Button>
@@ -237,9 +252,7 @@ export default function PricingPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Pricing</DialogTitle>
-            <DialogDescription>
-              Set new base price and per kilometer rate
-            </DialogDescription>
+            <DialogDescription>Set new base price and per kilometer rate</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">

@@ -33,7 +33,7 @@ export default function ValueProposition() {
             <div className="mb-4 rounded-full bg-motergna-red/10 p-4">
               <LayoutDashboard className="h-10 w-10 text-motergna-red" />
             </div>
-            <h3 className="mb-2 text-xl font-bold">Admin Dashboard</h3>
+            <h3 className="mb-2 text-xl font-bold">User Dashboard</h3>
             <p className="mb-4 text-gray-600">
               Comprehensive fleet management tools with analytics and reporting capabilities.
             </p>
