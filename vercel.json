@@ -1,20 +1,4 @@
-{
-    "version": 2,
-    "builds": [
-      {
-        "src": "package.json",
-        "use": "@vercel/next"
-      }
-    ],
-    "build": {
-      "env": {
-        "SKIP_DATABASE": "true"
-      }
-    },
-    "routes": [
-      {
-        "src": "/api/(.*)",
-        "dest": "404"  
-      }
-    ]
+  {
+    "buildCommand": "next build",
+    "outputDirectory": ".next"
   }

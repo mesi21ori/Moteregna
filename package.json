@@ -6,11 +6,13 @@
     "seed": "node --loader ts-node/esm prisma/seed.ts"
   },
   "scripts": {
+
+  "build": "next build",
+  "migrate:deploy": "prisma migrate deploy" ,
     "dev": "next dev",
-    "build": "yarn migrate:deploy && next build",
+
     "start": "next start",
     "migrate:dev": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
     "generate": "prisma generate",
     "seed": "node --loader ts-node/esm prisma/seed.ts",
