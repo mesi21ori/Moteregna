@@ -46,7 +46,7 @@ async function main() {
     await prisma.price.create({
       data: {
         userId: superAdmin.id,
-        initialPrice: 100,
+        Price: 100,
       },
     });
 

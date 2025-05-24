@@ -96,11 +96,13 @@ model Delivery {
 model Price {
   id            String   @id @default(cuid())
   userId        String  
-  initialPrice  Float    @default(100)   
+  Price  Float    @default(100)   
   perkilometer  Float    @default(1.2)  
+  perminute     Float    @default(0.5)
+  isActive      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
+  isActiveDate DateTime? @default(now())     
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserPrices")
 }
 

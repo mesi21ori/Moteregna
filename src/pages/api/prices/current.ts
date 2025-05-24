@@ -64,7 +64,7 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       data: {
-        basePrice: currentPrice.initialPrice,
+        basePrice: currentPrice.Price,
         perKmPrice: currentPrice.perkilometer,
         lastUpdated: currentPrice.updatedAt,
         updatedBy: `${currentPrice.user.firstName} ${currentPrice.user.lastName}`

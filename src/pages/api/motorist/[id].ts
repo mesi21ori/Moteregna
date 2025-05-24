@@ -55,7 +55,7 @@ export default async function handler(
       user: motorist.user,
       isAvailable: motorist.isAvailable,
       isOnline: motorist.isOnline,
-      currentLocation: motorist.currentLocation,
+      // currentLocation: motorist.currentLocation,
     }
 
     return res.status(200).json(responseData)

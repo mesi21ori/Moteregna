@@ -15,14 +15,18 @@ import {
 } from "../../../components/ui/dialog"
 import { Label } from "../../../components/ui/label"
 import { Badge } from "../../../components/ui/badge"
-import { Edit, User, Search } from "lucide-react"
+import { Edit, User, Search, CheckCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Switch } from "../../../components/ui/switch"
 
 interface Price {
   id: string
   basePrice: number
   perKmPrice: number
+  perMinutePrice: number
+  isActive: boolean
+  isActiveDate: string | null
   createdAt: string
   updatedAt: string
   updatedBy: string
@@ -35,13 +39,15 @@ export default function PricingPage() {
   const [selectedPrice, setSelectedPrice] = useState<Price | null>(null)
   const [newBasePrice, setNewBasePrice] = useState("")
   const [newPerKmPrice, setNewPerKmPrice] = useState("")
+  const [newPerMinutePrice, setNewPerMinutePrice] = useState("")
+  const [newIsActive, setNewIsActive] = useState(false)
   const [prices, setPrices] = useState<Price[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
-    totalPages: 1
+    totalPages: 1,
   })
 
   useEffect(() => {
@@ -54,21 +60,22 @@ export default function PricingPage() {
       const response = await fetch(
         `/api/prices/history?page=${pagination.page}&limit=${pagination.limit}&search=${searchTerm}`,
         {
-          credentials: 'include'
-        }
+          credentials: "include",
+        },
       )
 
       if (!response.ok) {
-        throw new Error('Failed to fetch pricing data')
+        throw new Error("Failed to fetch pricing data")
       }
 
       const { data, pagination: paginationData } = await response.json()
       setPrices(data)
       setPagination(paginationData)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to load pricing data')
-      if (error instanceof Error && error.message.includes('Unauthorized')) {
-        router.push('/sginin')
+      console.error("Error fetching price history:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to load pricing data")
+      if (error instanceof Error && error.message.includes("Unauthorized")) {
+        router.push("/signin")
       }
     } finally {
       setLoading(false)
@@ -76,13 +83,15 @@ export default function PricingPage() {
   }
 
   const handlePageChange = (newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }))
+    setPagination((prev) => ({ ...prev, page: newPage }))
   }
 
   const handleEditClick = (price: Price) => {
     setSelectedPrice(price)
     setNewBasePrice(price.basePrice.toString())
     setNewPerKmPrice(price.perKmPrice.toString())
+    setNewPerMinutePrice(price.perMinutePrice.toString())
+    setNewIsActive(price.isActive)
     setEditDialogOpen(true)
   }
 
@@ -90,33 +99,59 @@ export default function PricingPage() {
     if (!selectedPrice) return
 
     try {
-      const response = await fetch('/api/prices', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          basePrice: Number(newBasePrice),
-          perKmPrice: Number(newPerKmPrice)
-        }),
-      })
+      // If creating a new price
+      if (selectedPrice.id === "new") {
+        const response = await fetch("/api/prices/addnew", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            basePrice: Number(newBasePrice),
+            perKmPrice: Number(newPerKmPrice),
+            perMinutePrice: Number(newPerMinutePrice),
+            isActive: newIsActive,
+          }),
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to update pricing')
+        if (!response.ok) {
+          throw new Error("Failed to create pricing")
+        }
+
+        toast.success("Pricing created successfully")
+      } else {
+        // If updating an existing price
+        const response = await fetch(`/api/prices/update?id=${selectedPrice.id}`, {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            basePrice: Number(newBasePrice),
+            perKmPrice: Number(newPerKmPrice),
+            perMinutePrice: Number(newPerMinutePrice),
+            isActive: newIsActive,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to update pricing")
+        }
+
+        toast.success("Pricing updated successfully")
       }
 
-      toast.success('Pricing updated successfully')
-      fetchPrices() 
+      // Refresh the price list after update
+      await fetchPrices()
       setEditDialogOpen(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update pricing')
+      toast.error(error instanceof Error ? error.message : "Failed to update pricing")
     }
   }
 
-  const filteredPrices = prices.filter((price) => 
-    price.updatedBy.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredPrices = prices.filter((price) => price.updatedBy.toLowerCase().includes(searchTerm.toLowerCase()))
 
   if (loading && prices.length === 0) {
     return (
@@ -138,7 +173,7 @@ export default function PricingPage() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value)
-              setPagination(prev => ({ ...prev, page: 1 }))
+              setPagination((prev) => ({ ...prev, page: 1 }))
             }}
           />
         </div>
@@ -155,7 +190,9 @@ export default function PricingPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Base Price</TableHead>
-                  <TableHead>Per KM Price</TableHead>
+                  <TableHead>Per KM</TableHead>
+                  <TableHead>Per Minute</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Last Updated</TableHead>
                   <TableHead>Updated By</TableHead>
@@ -166,17 +203,25 @@ export default function PricingPage() {
                 {filteredPrices.length > 0 ? (
                   filteredPrices.map((price) => (
                     <TableRow key={price.id}>
-                      <TableCell>{price.basePrice.toFixed(2)} ETB</TableCell>
-                      <TableCell>ETB {price.perKmPrice.toFixed(2)}/km</TableCell>
+                      <TableCell>{price.basePrice !== undefined ? price.basePrice.toFixed(2) : "0.00"} ETB</TableCell>
+                      <TableCell>{price.perKmPrice !== undefined ? price.perKmPrice.toFixed(2) : "0.00"} ETB</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {new Date(price.createdAt).toLocaleDateString()}
-                        </Badge>
+                        {price.perMinutePrice !== undefined ? price.perMinutePrice.toFixed(2) : "0.00"} ETB
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {new Date(price.updatedAt).toLocaleDateString()}
-                        </Badge>
+                        {price.isActive ? (
+                          <Badge className="bg-green-100 text-green-800 border-green-300">
+                            <CheckCircle className="mr-1 h-3 w-3" /> Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">Inactive</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{new Date(price.createdAt).toLocaleDateString()}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{new Date(price.updatedAt).toLocaleDateString()}</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
@@ -185,11 +230,7 @@ export default function PricingPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleEditClick(price)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(price)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </Button>
@@ -198,7 +239,7 @@ export default function PricingPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       No pricing data found.
                     </TableCell>
                   </TableRow>
@@ -237,9 +278,7 @@ export default function PricingPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Pricing</DialogTitle>
-            <DialogDescription>
-              Set new base price and per kilometer rate
-            </DialogDescription>
+            <DialogDescription>Set new pricing configuration</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -263,6 +302,21 @@ export default function PricingPage() {
                 value={newPerKmPrice}
                 onChange={(e) => setNewPerKmPrice(e.target.value)}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="perMinutePrice">Per Minute Price (ETB)</Label>
+              <Input
+                id="perMinutePrice"
+                type="number"
+                step="0.01"
+                min="0"
+                value={newPerMinutePrice}
+                onChange={(e) => setNewPerMinutePrice(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch id="isActive" checked={newIsActive} onCheckedChange={setNewIsActive} />
+              <Label htmlFor="isActive">Set as active pricing</Label>
             </div>
           </div>
           <DialogFooter>

@@ -18,7 +18,7 @@ import { Eye, MoreHorizontal, Search } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-
+import axios from "axios"
 interface Motorist {
   id: string
   name: string
@@ -49,19 +49,17 @@ export default function MotoristsPage() {
   const fetchMotorists = async () => {
     try {
       setLoading(true)
-      const response = await fetch(
-        `/api/admin/list_of_motorist?page=${pagination.page}&limit=${pagination.limit}&search=${searchTerm}`,
-        {
-          credentials: 'include'
-        }
+      const response = await axios.get(
+        `http://134.122.27.115:3000/api/admin/list_of_motorist?page=${pagination.page}&limit=${pagination.limit}&search=${searchTerm}`,
+        
       )
 
-      if (!response.ok) {
+      if (response.status != 200) {
         throw new Error('Failed to fetch motorists')
       }
 
-      const { data, pagination: paginationData } = await response.json()
-      setMotorists(data)
+      const { data, pagination: paginationData } = await response.data()
+      setMotorists(data.data)
       setPagination(paginationData)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load motorists')

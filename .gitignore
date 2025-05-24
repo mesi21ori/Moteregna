@@ -11,6 +11,8 @@
 /build
 /public
 .env
+.next
+.vscode
 yarn.lock
 # debug
 npm-debug.log*
