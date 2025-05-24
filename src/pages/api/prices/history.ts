@@ -107,10 +107,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
+      return res.status(401).json({
         success: false,
         message: "Unauthorized: Invalid token",
       })
+        message: "Unauthorized: Invalid token",
+      })
     }
+
+    return res.status(500).json({
 
     return res.status(500).json({
       success: false,
@@ -119,5 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   } finally {
     await prisma.$disconnect()
+    await prisma.$disconnect()
   }
 }
+
