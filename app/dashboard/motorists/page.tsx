@@ -14,11 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu"
 import { Badge } from "../../../components/ui/badge"
-import { Eye, MoreHorizontal, Search } from "lucide-react"
+import { CheckCircle, Eye, MoreHorizontal, Search, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-
+import axios from "axios"
 interface Motorist {
   id: string
   name: string
@@ -31,7 +31,7 @@ interface Motorist {
 }
 
 export default function MotoristsPage() {
-  const router = useRouter()
+  // const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [motorists, setMotorists] = useState<Motorist[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,29 +49,74 @@ export default function MotoristsPage() {
   const fetchMotorists = async () => {
     try {
       setLoading(true)
-      const response = await fetch(
-        `/api/admin/list_of_motorist?page=${pagination.page}&limit=${pagination.limit}&search=${searchTerm}`,
+    const token = localStorage.getItem('accessToken')
+const response = await axios.get(
+        `http://134.122.27.115:3002/api/admin/list_of_motorist`,
         {
-          credentials: 'include'
+          headers: {
+            Authorization: `Bearer ${token}`,
+         }
         }
       )
-
-      if (!response.ok) {
+      console.log(response)
+      if (response.status != 200) {
         throw new Error('Failed to fetch motorists')
       }
 
-      const { data, pagination: paginationData } = await response.json()
-      setMotorists(data)
-      setPagination(paginationData)
+      const data  = await response.data
+      console.log(data)
+      setMotorists(data.data)
+      // setPagination(paginationData)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to load motorists')
-      if (error instanceof Error && error.message.includes('Unauthorized')) {
-        router.push('/login')
-      }
+      // toast.error(error instanceof Error ? error.message : 'Failed to load motorists')
+      // if (error instanceof Error && error.message.includes('Unauthorized')) {
+      //   router.push('/login')
+      // }
     } finally {
       setLoading(false)
     }
   }
+  const handleDeleteMotorist = async (motoristId: string) => {
+  const confirmed = window.confirm("Are you sure you want to delete this motorist?")
+  if (!confirmed) return
+
+    const token = localStorage.getItem('accessToken')
+  try {
+    await axios.delete(`http://134.122.27.115:3002/api/motorist/delete/${motoristId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    toast.success("Motorist deleted successfully")
+    fetchMotorists()
+  } catch (err) {
+    toast.error("Failed to delete motorist")
+  }
+}
+
+const toggleAvailability = async (motoristId: string, currentStatus: string) => {
+  try {
+    const token = localStorage.getItem('accessToken')
+    const isAvailable = currentStatus !== "Available"
+    await axios.post(
+      `http://134.122.27.115:3002/api/motorist/isAvailable`,
+      {
+        motoristId,
+        isAvailable,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+    toast.success(`Motorist marked as ${isAvailable ? "Available" : "Unavailable"}`)
+    fetchMotorists()
+  } catch (error) {
+    toast.error("Failed to update availability")
+  }
+}
+
 
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }))
@@ -131,8 +176,8 @@ export default function MotoristsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMotorists.length > 0 ? (
-                    filteredMotorists.map((motorist) => (
+                  {motorists.length > 0 ? (
+                    motorists.map((motorist) => (
                       <TableRow key={motorist.id}>
                         <TableCell className="font-medium">{motorist.name}</TableCell>
                         <TableCell>{motorist.licenseNumber}</TableCell>
@@ -161,12 +206,22 @@ export default function MotoristsPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem asChild>
+                                  <DropdownMenuItem asChild>
                                 <Link href={`/dashboard/motorists/${motorist.id}`}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   View Details
                                 </Link>
                               </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteMotorist(motorist.id)}>
+                        <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                        Delete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => toggleAvailability(motorist.id, motorist.status)}
+                      >
+                        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                        {motorist.status === "Available" ? "Mark Unavailable" : "Mark Available"}
+                      </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>

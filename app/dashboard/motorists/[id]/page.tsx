@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components
 import { Badge } from "../../../../components/ui/badge"
 import { Separator } from "../../../../components/ui/separator"
 import { toast } from "sonner"
+import axios from "axios"
 
 interface MotoristDetails {
   id: string
@@ -46,15 +47,21 @@ export default function MotoristDetailsPage() {
     const fetchMotoristDetails = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`/api/motorist/${motoristId}`, {
-          credentials: 'include'
-        })
+        console.log("gettings motorist details")
+        const response = await axios.get(`http://134.122.27.115:3000/api/motorist/${motoristId}`,
+          {
+          headers: {
+            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTk5bWNydzIwMDAwcnpia3p6bmJhZ2w3IiwicGhvbmUiOiIxMjM0NTY3ODkwIiwicm9sZSI6IlNVUEVSQURNSU4iLCJzZXNzaW9uSWQiOiI4OWVkMTRmNi1hZmNhLTRiOTgtOGI3NS01ZGE0YmMzMDg5ZmIiLCJpYXQiOjE3NDc5OTc5MTEsImV4cCI6MTc1MDU4OTkxMX0.I2y-LnECnJIYBYsE362XbTGtRfmw9aBYWhV_-EYQ2oQ"
+          }
+        }
+        )
+        console.log(response)
 
-        if (!response.ok) {
+        if (response.status != 200) {
           throw new Error('Failed to fetch motorist details')
         }
 
-        const data = await response.json()
+        const data = await response.data
         setMotorist(data)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Failed to load motorist details')
@@ -111,12 +118,13 @@ export default function MotoristDetailsPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center text-center">
             <div className="relative w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-background">
-              <Image
-                src={motorist.profilePhoto}
-                alt={motorist.name}
-                fill
-                className="object-cover"
-              />
+              
+                <img
+                      src={`http://134.122.27.115${motorist.profilePhoto}`}
+                      alt="Business Permit"
+                      className="object-contain"
+                    />
+                 
             </div>
             <h2 className="text-xl font-bold">{motorist.name}</h2>
             <p className="text-muted-foreground">{motorist.email}</p>
@@ -197,12 +205,17 @@ export default function MotoristDetailsPage() {
                 <div className="mt-6">
                   <h3 className="text-sm font-medium mb-2">Profile Photo</h3>
                   <div className="relative h-60 w-full rounded-md overflow-hidden border">
-                    <Image
-                      src={motorist.profilePhoto}
+                    <img
+                      src={`http://134.122.27.115${motorist.profilePhoto}`}
+                      alt="Business Permit"
+                      className="object-contain"
+                    />
+                    {/* <Image
+                      src={`http://134.122.27.115${motorist.profilePhoto}`}
                       alt="Profile Photo"
                       fill
                       className="object-contain"
-                    />
+                    /> */}
                   </div>
                   <Button variant="outline" size="sm" className="mt-2">
                     <Download className="h-4 w-4 mr-2" />
@@ -233,12 +246,17 @@ export default function MotoristDetailsPage() {
                 <div className="mt-6">
                   <h3 className="text-sm font-medium mb-2">Vehicle Photo</h3>
                   <div className="relative h-60 w-full rounded-md overflow-hidden border">
-                    <Image
+                    <img
+                      src={`http://134.122.27.115${motorist.vehiclePhoto}`}
+                      alt="Business Permit"
+                      className="object-contain"
+                    />
+                    {/* <Image
                       src={motorist.vehiclePhoto}
                       alt="Vehicle Photo"
                       fill
                       className="object-contain"
-                    />
+                    /> */}
                   </div>
                   <Button variant="outline" size="sm" className="mt-2">
                     <Download className="h-4 w-4 mr-2" />
@@ -257,12 +275,17 @@ export default function MotoristDetailsPage() {
                 <div className="mt-6">
                   <h3 className="text-sm font-medium mb-2">License Photo</h3>
                   <div className="relative h-60 w-full rounded-md overflow-hidden border">
-                    <Image
+                    <img
+                      src={`http://134.122.27.115${motorist.licensePhoto}`}
+                      alt="Business Permit"
+                      className="object-contain"
+                    />
+                    {/* <Image
                       src={motorist.licensePhoto}
                       alt="License Photo"
                       fill
                       className="object-contain"
-                    />
+                    /> */}
                   </div>
                   <Button variant="outline" size="sm" className="mt-2">
                     <Download className="h-4 w-4 mr-2" />
@@ -275,10 +298,9 @@ export default function MotoristDetailsPage() {
                 <div className="mt-2">
                   <h3 className="text-sm font-medium mb-2">Business Permit</h3>
                   <div className="relative h-60 w-full rounded-md overflow-hidden border">
-                    <Image
-                      src={motorist.businessPermitPhoto}
+                    <img
+                      src={`http://134.122.27.115${motorist.businessPermitPhoto}`}
                       alt="Business Permit"
-                      fill
                       className="object-contain"
                     />
                   </div>

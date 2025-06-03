@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
+import { is } from 'date-fns/locale';
 
 const prisma = new PrismaClient();
 
@@ -14,6 +15,13 @@ const validateToken = (token: string): { userId: string; role: string } | null =
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+ res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end(); // Preflight request
+  }
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -88,6 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         totalDeliveries,
         totalDistance: `${totalDistance.toFixed(2)} km`,
         joinedDate: motorist.createdAt.toISOString().split('T')[0],
+        isAvailable: motorist.isAvailable,
       };
     });
 

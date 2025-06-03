@@ -45,33 +45,33 @@ export default function DashboardLayout({
   const [mounted, setMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/verify', {
-          method: 'GET',
-          credentials: 'include',
-        })
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     try {
+  //       const response = await fetch('/api/auth/verify', {
+  //         method: 'GET',
+  //         credentials: 'include',
+  //       })
 
-        if (!response.ok) {
-          throw new Error('Session verification failed')
-        }
+  //       if (!response.ok) {
+  //         throw new Error('Session verification failed')
+  //       }
 
-        const data = await response.json()
-        if (data.user) {
-          setUserData(data.user)
-          setUserRole(data.user.role.toLowerCase())
-        }
-      } catch (error) {
+  //       const data = await response.json()
+  //       if (data.user) {
+  //         setUserData(data.user)
+  //         setUserRole(data.user.role.toLowerCase())
+  //       }
+  //     } catch (error) {
 
-        router.push('/sginin')
-      } finally {
-        setMounted(true)
-      }
-    }
+  //       router.push('/sginin')
+  //     } finally {
+  //       setMounted(true)
+  //     }
+  //   }
 
-    checkAuth()
-  }, [router])
+  //   // checkAuth()
+  // }, [router])
 
   const handleLogout = async () => {
     try {
@@ -97,17 +97,17 @@ export default function DashboardLayout({
       icon: ShoppingCart }
   ]
 
-  if (!mounted || !userRole) {
-    return (
-      <div className="flex min-h-screen">
-        <div className="hidden md:block w-64 border-r bg-gradient-primary"></div>
-        <div className="flex-1">
-          <div className="h-16 border-b glass-card"></div>
-          <main className="p-6">Loading...</main>
-        </div>
-      </div>
-    )
-  }
+  // if (!mounted || !userRole) {
+  //   return (
+  //     <div className="flex min-h-screen">
+  //       <div className="hidden md:block w-64 border-r bg-gradient-primary"></div>
+  //       <div className="flex-1">
+  //         <div className="h-16 border-b glass-card"></div>
+  //         <main className="p-6">Loading...</main>
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full mt-4">
@@ -119,7 +119,7 @@ export default function DashboardLayout({
           <div className="flex flex-col">
             <span className="text-lg font-bold text-white">Admin Panel</span>
             <span className="text-xs text-white/70 capitalize">
-              {userRole.replace("superadmin", "super admin")}
+              {/* {userRole.replace("superadmin", "super admin")} */}
             </span>
           </div>
         </div>

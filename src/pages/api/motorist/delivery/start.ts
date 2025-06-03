@@ -193,7 +193,7 @@ const toggleAvailabilitySchema = z.object({
 const createDeliverySchema = z.object({
   motoristId: z.string().min(1, "Motorist ID is required"),
   customerPhone: z.string().min(1, "Customer phone number is required"),
-  source: z.string().min(1, "Source location is required"),
+  source: z.string(),
   sourceLat: z.number(),
   sourceLong: z.number(),
   startTime: z.string().min(1, "Start time is required") 
@@ -310,7 +310,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         });
       }
-
+if(validatedData.source == ''){
+validatedData.source = 'Unknown Location';
+}
       const startLocation = await prisma.location.create({
         data: {
           name: validatedData.source,

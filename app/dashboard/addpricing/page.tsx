@@ -11,6 +11,7 @@ import { Badge } from "../../../components/ui/badge"
 import { User } from "lucide-react"
 import { toast } from "sonner"
 
+import axios from "axios"
 interface PricingHistory {
   id: string
   basePrice: number
@@ -37,15 +38,17 @@ export default function AddPricingPage() {
   const fetchUserPricingHistory = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/prices/user-history', {
-        credentials: 'include'
-      })
+      const response = await axios.get('http://134.122.27.115:3000/api/prices/user-history', {
+          headers: {
+            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTk5bWNydzIwMDAwcnpia3p6bmJhZ2w3IiwicGhvbmUiOiIxMjM0NTY3ODkwIiwicm9sZSI6IlNVUEVSQURNSU4iLCJzZXNzaW9uSWQiOiI4OWVkMTRmNi1hZmNhLTRiOTgtOGI3NS01ZGE0YmMzMDg5ZmIiLCJpYXQiOjE3NDc5OTc5MTEsImV4cCI6MTc1MDU4OTkxMX0.I2y-LnECnJIYBYsE362XbTGtRfmw9aBYWhV_-EYQ2oQ"
+          }
+        })
 
-      if (!response.ok) {
+      if (response.status != 200) {
         throw new Error('Failed to fetch pricing history')
       }
 
-      const { data } = await response.json()
+      const { data } = await response
       setUserPricingHistory(data)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to load pricing history')
