@@ -45,46 +45,6 @@ export default function DashboardLayout({
   const [mounted, setMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     try {
-  //       const response = await fetch('/api/auth/verify', {
-  //         method: 'GET',
-  //         credentials: 'include',
-  //       })
-
-  //       if (!response.ok) {
-  //         throw new Error('Session verification failed')
-  //       }
-
-  //       const data = await response.json()
-  //       if (data.user) {
-  //         setUserData(data.user)
-  //         setUserRole(data.user.role.toLowerCase())
-  //       }
-  //     } catch (error) {
-
-  //       router.push('/sginin')
-  //     } finally {
-  //       setMounted(true)
-  //     }
-  //   }
-
-  //   // checkAuth()
-  // }, [router])
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/signout', {
-        method: 'POST',
-        credentials: 'include',
-      })
-      router.push('/sginin')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
-
   const navigationItems = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
     ...(userRole === "superadmin" ? [{ name: "Admin Management", href: "/dashboard/admins", icon: UserCog }] : []),
@@ -121,6 +81,9 @@ export default function DashboardLayout({
             <span className="text-xs text-white/70 capitalize">
               {/* {userRole.replace("superadmin", "super admin")} */}
             </span>
+            {/* <span className="text-xs text-white/70 capitalize">
+              {userRole.replace("superadmin", "super admin")}
+            </span> */}
           </div>
         </div>
       </div>
@@ -143,47 +106,6 @@ export default function DashboardLayout({
           ))}
         </div>
       </nav>
-      <div className="p-4 border-t border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Avatar>
-              <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-              <AvatarFallback className="bg-white/20 text-white">
-                {userData?.firstName?.charAt(0)}{userData?.lastName?.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-white">
-                {userData?.firstName} {userData?.lastName}
-              </span>
-              <span className="text-xs text-white/70">{userData?.phone}</span>
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full text-white hover:bg-white/10"
-                aria-label="User settings"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
-                View Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
     </div>
   )
 
@@ -228,32 +150,6 @@ export default function DashboardLayout({
             {navigationItems.find((item) => (pathname ?? "").startsWith(item.href))?.name || "Dashboard"}
           </h1>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                  <AvatarFallback>
-                    {userData?.firstName?.charAt(0)}{userData?.lastName?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="sr-only">User menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </header>
         
         <main className="flex-1 p-4 md:p-6 overflow-auto">

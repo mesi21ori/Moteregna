@@ -16,7 +16,7 @@ async function main() {
 
   const superAdminPassword = await hash(superAdminPasswordPlain, 10);
 
-  let superAdmin = await prisma.user.findUnique({
+  let superAdmin = await prisma.user.findFirst({
     where: { phone: superAdminPhone },
   });
 
@@ -46,7 +46,7 @@ async function main() {
     await prisma.price.create({
       data: {
         userId: superAdmin.id,
-        initialPrice: 100,
+        Price: 100,
       },
     });
 

@@ -1,17 +1,23 @@
-'use client'
+import AppShowcase from "./landing/app-showcase";
+import FinalCTA from "./landing/final-cta";
+import Footer from "./landing/footer";
+import Hero from "./landing/hero";
+import StatisticsVisualizations from "./landing/statistics-visualizations";
+import StatsBar from "./landing/stats-bar";
+import Testimonials from "./landing/testimonials";
+import ValueProposition from "./landing/value-proposition";
 
-import { Suspense, useEffect } from "react"; 
-
-import SignIn from "./signin/page";
-import { signOut } from "next-auth/react";
-import { Loader } from "lucide-react";
-import './globals.css';
-export default function Dashboard(props: any) {
-  
-
+export default function LandingPage() {
   return (
-    <Suspense fallback={<Loader></Loader>}>
-        <SignIn/>  
-    </Suspense>
-  );
+    <main className="flex min-h-screen flex-col">
+      <Hero />
+      <StatsBar />
+      <ValueProposition />
+      <AppShowcase />
+      <StatisticsVisualizations />
+      <FinalCTA />
+      <Testimonials />
+      <Footer />
+    </main>
+  )
 }

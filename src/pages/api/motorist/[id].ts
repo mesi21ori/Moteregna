@@ -37,25 +37,25 @@ export default async function handler(
 
     const responseData = {
       id: motorist.id,
-      name: `${motorist.user.firstName} ${motorist.user.middleName ? motorist.user.middleName + ' ' : ''}${motorist.user.lastName}`,
+      name: `${motorist.user?.firstName} ${motorist.user?.middleName ? motorist.user.middleName + ' ' : ''}${motorist.user?.lastName}`,
       email: '',
-      phone: motorist.user.phone,
-      address: motorist.user.address || '',
+      phone: motorist.user?.phone,
+      address: motorist.user?.address || '',
       licenseNumber: motorist.licenseNumber,
       vehicleModel: motorist.vehicleModel,
       vehiclePlate: motorist.vehiclePlateNumber,
       vehicleYear: '',
       vehicleColor: '',
-      status: motorist.user.status ? 'active' : 'inactive',
+      status: motorist.user?.status ? 'active' : 'inactive',
       registrationDate: motorist.createdAt.toISOString(),
-      profilePhoto: motorist.user.profile || '/placeholder.svg',
+      profilePhoto: motorist.user?.profile || '/placeholder.svg',
       licensePhoto: motorist.driversLicencephotoFront || '/placeholder.svg',
       vehiclePhoto: motorist.Librephoto || '/placeholder.svg',
       businessPermitPhoto: motorist.businessPermit || '/placeholder.svg',
       user: motorist.user,
       isAvailable: motorist.isAvailable,
       isOnline: motorist.isOnline,
-      currentLocation: motorist.currentLocation,
+      // currentLocation: motorist.currentLocation,
     }
 
     return res.status(200).json(responseData)

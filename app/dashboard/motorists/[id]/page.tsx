@@ -207,7 +207,7 @@ export default function MotoristDetailsPage() {
                   <div className="relative h-60 w-full rounded-md overflow-hidden border">
                     <img
                       src={`http://134.122.27.115${motorist.profilePhoto}`}
-                      alt="Business Permit"
+                      alt="Profile"
                       className="object-contain"
                     />
                     {/* <Image

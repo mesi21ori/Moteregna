@@ -87,8 +87,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return {
         id: motorist.id,
-        name: `${motorist.user.firstName} ${motorist.user.lastName}`,
-        phone: motorist.user.phone,
+        name: `${motorist.user?.firstName} ${motorist.user?.lastName}`,
+        phone: motorist.user?.phone,
         licenseNumber: motorist.licenseNumber,
         vehicle: `${motorist.vehicleModel} (${motorist.vehiclePlateNumber})`,
         status: motorist.isAvailable ? 'Available' : 'Unavailable',

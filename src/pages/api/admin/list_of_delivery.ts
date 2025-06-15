@@ -83,19 +83,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             user: true,
           },
         },
-        customer: true,
+        Customer: true,
       },
     });
 
     const formattedDeliveries = deliveries.map(delivery => ({
       id: delivery.id,
-      startPoint: delivery.startLocation.name,
+      startPoint: delivery.startLocation?.name || 'N/A',
+      // startPoint: delivery.startLocation.name,
       endPoint: delivery.endLocation?.name || 'N/A',
       motorist: delivery.motorist 
-        ? `${delivery.motorist.user.firstName} ${delivery.motorist.user.lastName}`
+        ? `${delivery.motorist.user?.firstName} ${delivery.motorist.user?.lastName}`
         : 'Unassigned',
-      motoristContact: delivery.motorist?.user.phone || 'N/A',
-      customer: delivery.customer?.phonenumber || 'N/A',
+      motoristContact: delivery.motorist?.user?.phone || 'N/A',
+      customer: delivery.customerPhone || 'N/A',
       distance: delivery.distance ? `${delivery.distance.toFixed(2)} km` : 'N/A',
       fee: delivery.fee ? `$${delivery.fee.toFixed(2)}` : 'Pending',
       status: delivery.status,
@@ -104,8 +105,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       createdAt: delivery.createdAt.toISOString().split('T')[0],
       coordinates: {
         start: {
-          lat: delivery.startLocation.latitude,
-          lng: delivery.startLocation.longitude,
+          lat: delivery.startLocation?.latitude,
+          lng: delivery.startLocation?.longitude,
         },
         end: delivery.endLocation ? {
           lat: delivery.endLocation.latitude,

@@ -7,56 +7,110 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id          String    @id @default(cuid())
-  firstName   String
+  firstName   String?
   middleName  String?
-  lastName    String
-  phone       String    @unique
-  password    String
+  lastName    String?
+  phone       String?
+  password    String?
   gender      String?
   birthdate   DateTime?
   address     String?
-  role        Role      @default(MOTORIST)
-  profile     String?   @unique 
-  isLoggedIn  Boolean   @default(false) 
+  role        Role?      @default(MOTORIST)
+  profile     String? 
+  isLoggedIn  Boolean?   @default(false) 
   sessionId   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  status      Boolean   @default(true)
+  createdAt   DateTime?  @default(now())
+  updatedAt   DateTime?  @updatedAt
+  status      Boolean?   @default(true)
+  // fcmToken    String?   
 
   motorists   Motorist[] @relation("UserMotorists")
   prices      Price[]    @relation("UserPrices")
+
+  Notification Notification[]
 }
 
 model Customer {
   id          String   @id @default(cuid())
-  phonenumber String  @unique
+  firstName   String
+  lastName    String
+  phone       String?  
+  phonenumber String?
+  password    String
+  address     String?
+  fcmToken    String?  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+
+
   deliveries  Delivery[] @relation("CustomerDeliveries")
+  packages    Package[]  @relation("CustomerPackages")
+
+  Notification Notification[]
 }
 
 model Motorist {
   id                String   @id @default(cuid())
-  userId            String
-  licenseNumber     String   @unique
+  userId            String?
+  licenseNumber     String?
   vehicleModel      String
   vehiclePlateNumber String
   Librephoto         String
   driversLicencephotoFront String
-  businessPermit String
+  businessPermit    String
   isAvailable       Boolean  @default(true)
   isOnline          Boolean  @default(false)
-  currentLocation   String?
+  currentLocationId   String? 
+  fcmToken          String?  
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserMotorists")
+  user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserMotorists")
   deliveries        Delivery[]
+  assignedPackages  Package[] @relation("MotoristPackages")
+  currentLocation    Location?      @relation("currentLocation", fields: [currentLocationId], references: [id])
+}
 
+model Package {
+  id                String     @id @default(cuid())
+  description       String
+ categoryId  String?
+  
+  weight            Float?
+  quantity         Int?
+
+  specialInstructions String?
+  status            PackageStatus @default(PENDING)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  // Relationships
+  customerId        String?
+  motoristId        String?
+  deliveryId        String?
+  pickupLocationId  String?
+  dropoffLocationId String?
+  
+  category    PackageCategory? @relation(fields: [categoryId], references: [id])
+  customer          Customer?  @relation(fields: [customerId], references: [id], name: "CustomerPackages")
+  motorist          Motorist?  @relation(fields: [motoristId], references: [id], name: "MotoristPackages")
+  delivery          Delivery?  @relation(fields: [deliveryId], references: [id])
+  pickupLocation    Location?  @relation("PackagePickupLocation", fields: [pickupLocationId], references: [id])
+  dropoffLocation   Location?  @relation("PackageDropoffLocation", fields: [dropoffLocationId], references: [id])
+}
+
+model PackageCategory {
+  id          String   @id @default(cuid())
+  name        String?   
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true)
+
+  packages    Package[]
 }
 
 
@@ -69,15 +123,18 @@ model Location {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  currentLocation Motorist[] @relation("currentLocation")
   startDeliveries Delivery[] @relation("StartLocation")
   endDeliveries   Delivery[] @relation("EndLocation")
+  packagePickups  Package[]  @relation("PackagePickupLocation")
+  packageDropoffs Package[]  @relation("PackageDropoffLocation")
 }
 
 model Delivery {
   id                String         @id @default(cuid())
   motoristId        String?
-  customerId        String?       
-  startLocationId   String
+  customerPhone        String?       
+  startLocationId   String?
   endLocationId     String?     
   status            DeliveryStatus @default(PENDING)
   distance          Float?        
@@ -88,28 +145,71 @@ model Delivery {
   updatedAt         DateTime       @updatedAt
 
   motorist          Motorist?      @relation(fields: [motoristId], references: [id])
-  customer          Customer?      @relation(fields: [customerId], references: [id], name: "CustomerDeliveries")
-  startLocation     Location       @relation("StartLocation", fields: [startLocationId], references: [id])
-  endLocation       Location?       @relation("EndLocation", fields: [endLocationId], references: [id])
+
+  startLocation     Location?       @relation("StartLocation", fields: [startLocationId], references: [id])
+  endLocation       Location?      @relation("EndLocation", fields: [endLocationId], references: [id])
+  packages          Package[]      
+
+  Customer Customer[] @relation("CustomerDeliveries")
 }
 
 model Price {
   id            String   @id @default(cuid())
   userId        String  
-  initialPrice  Float    @default(100)   
+  Price         Float    @default(100)   
   perkilometer  Float    @default(1.2)  
+  perminute     Float    @default(0.5)
+  isActive      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
+  isActiveDate  DateTime? @default(now())     
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserPrices")
 }
 
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String?
+  customerId  String?
+  title       String
+  body        String
+  data        Json?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  user        User?     @relation(fields: [userId], references: [id])
+  customer    Customer? @relation(fields: [customerId], references: [id])
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PrivacyTerm {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  type      String   
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model About {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 enum Role {
   SUPERADMIN
   ADMIN
   MOTORIST
-  CUSTOMER
+  // Removed CUSTOMER completely
 }
 
 enum DeliveryStatus {
@@ -120,3 +220,140 @@ enum DeliveryStatus {
   DELIVERED
   CANCELLED
 }
+
+enum PackageStatus {
+  PENDING
+  ASSIGNED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+
+
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+
+// model User {
+//   id          String    @id @default(cuid())
+//   firstName   String
+//   middleName  String?
+//   lastName    String
+//   phone       String    @unique
+//   password    String
+//   gender      String?
+//   birthdate   DateTime?
+//   address     String?
+//   role        Role      @default(MOTORIST)
+//   profile     String?   @unique 
+//   isLoggedIn  Boolean   @default(false) 
+//   sessionId   String?
+//   createdAt   DateTime  @default(now())
+//   updatedAt   DateTime  @updatedAt
+//   status      Boolean   @default(true)
+
+//   motorists   Motorist[] @relation("UserMotorists")
+//   prices      Price[]    @relation("UserPrices")
+// }
+
+// model Customer {
+//   id          String   @id @default(cuid())
+//   phonenumber String  @unique
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+
+//   deliveries  Delivery[] @relation("CustomerDeliveries")
+// }
+
+// model Motorist {
+//   id                String   @id @default(cuid())
+//   userId            String
+//   licenseNumber     String   @unique
+//   vehicleModel      String
+//   vehiclePlateNumber String
+//   Librephoto         String
+//   driversLicencephotoFront String
+//   businessPermit String
+//   isAvailable       Boolean  @default(true)
+//   isOnline          Boolean  @default(false)
+//   currentLocation   String?
+//   createdAt         DateTime @default(now())
+//   updatedAt         DateTime @updatedAt
+
+//   user              User       @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserMotorists")
+//   deliveries        Delivery[]
+
+// }
+
+
+// model Location {
+//   id        String   @id @default(cuid())
+//   name      String
+//   address   String
+//   latitude  Float
+//   longitude Float
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   startDeliveries Delivery[] @relation("StartLocation")
+//   endDeliveries   Delivery[] @relation("EndLocation")
+// }
+
+// model Delivery {
+//   id                String         @id @default(cuid())
+//   motoristId        String?
+//   customerId        String?       
+//   startLocationId   String
+//   endLocationId     String?     
+//   status            DeliveryStatus @default(PENDING)
+//   distance          Float?        
+//   fee               Float?         
+//   startTime         DateTime?
+//   endTime           DateTime?
+//   createdAt         DateTime       @default(now())
+//   updatedAt         DateTime       @updatedAt
+
+//   motorist          Motorist?      @relation(fields: [motoristId], references: [id])
+//   customer          Customer?      @relation(fields: [customerId], references: [id], name: "CustomerDeliveries")
+//   startLocation     Location       @relation("StartLocation", fields: [startLocationId], references: [id])
+//   endLocation       Location?       @relation("EndLocation", fields: [endLocationId], references: [id])
+// }
+
+// model Price {
+//   id            String   @id @default(cuid())
+//   userId        String  
+//   Price  Float    @default(100)   
+//   perkilometer  Float    @default(1.2)  
+//   perminute     Float    @default(0.5)
+//   isActive      Boolean  @default(false)
+//   createdAt     DateTime @default(now())
+//   updatedAt     DateTime @updatedAt
+//   isActiveDate DateTime? @default(now())     
+//   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserPrices")
+// }
+
+
+// enum Role {
+//   SUPERADMIN
+//   ADMIN
+//   MOTORIST
+//   CUSTOMER
+// }
+
+// enum DeliveryStatus {
+//   PENDING
+//   ASSIGNED
+//   PICKED_UP
+//   IN_TRANSIT
+//   DELIVERED
+//   CANCELLED
+// }

@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const validatedData = signupSchema.parse(req.body);
 
       // Check for existing user with the same phone number
-      const existingUser = await prisma.user.findUnique({
+      const existingUser = await prisma.user.findFirst({
         where: { phone: validatedData.phone },
       });
 
@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Check for existing motorist with the same license number
-      const existingMotorist = await prisma.motorist.findUnique({
+      const existingMotorist = await prisma.motorist.findFirst({
         where: { licenseNumber: validatedData.licenseNumber },
       });
 

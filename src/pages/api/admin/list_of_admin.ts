@@ -40,7 +40,7 @@ export default async function handler(
       Name: `${admin.firstName} ${admin.lastName}`,
       Phone: admin.phone,
       Status: admin.status ? 'Active' : 'Inactive',
-      Created: admin.createdAt.toISOString().split('T')[0] 
+      Created: admin.createdAt ? admin.createdAt.toISOString().split('T')[0] : null
     }));
 
     return res.status(200).json({

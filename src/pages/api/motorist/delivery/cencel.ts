@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const delivery = await prisma.delivery.findUnique({
       where: { id: deliveryId },
       include: {
-        customer: true,
+        Customer: true,
         startLocation: true,
         motorist: true,
       },
@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where: { id: deliveryId },
         data: { status: 'CANCELLED' },
         include: {
-          customer: true,
+          Customer: true,
           startLocation: true,
         },
       }),
@@ -87,10 +87,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Response formatting
     const response = {
       id: updatedDelivery.id,
-      customerPhone: updatedDelivery.customer?.phonenumber || null,
-      source: updatedDelivery.startLocation.name,
-      sourceLat: updatedDelivery.startLocation.latitude,
-      sourceLong: updatedDelivery.startLocation.longitude,
+      customerPhone: updatedDelivery.customerPhone || null,
+      source: updatedDelivery.startLocation?.name,
+      sourceLat: updatedDelivery.startLocation?.latitude,
+      sourceLong: updatedDelivery.startLocation?.longitude,
       status: updatedDelivery.status,
       startTime: updatedDelivery.startTime,
     };

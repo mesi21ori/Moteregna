@@ -1,4 +1,6 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+
+type Role = 'ADMIN' | 'SUPERADMIN' | 'USER'; // Define Role type manually
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
@@ -81,8 +83,9 @@ export default async function handler(
       }
     });
 
-    Object.values(monthlyData).forEach(data => {
-      data.inactive = data.new - data.active;
+    Object.values(monthlyData).forEach((data) => {
+      const typedData = data as { month: string; active: number; new: number; inactive: number };
+      typedData.inactive = typedData.new - typedData.active;
     });
 
     return res.status(200).json({

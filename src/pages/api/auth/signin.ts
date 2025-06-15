@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const validatedData = signinSchema.parse(req.body);
     
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { phone: validatedData.phone },
     });
 
@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const isPasswordValid = await bcrypt.compare(validatedData.password, user.password);
+    const isPasswordValid = await bcrypt.compare(validatedData.password, user.password ?? "");
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid password' });

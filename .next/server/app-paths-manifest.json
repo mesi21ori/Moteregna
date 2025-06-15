@@ -1,5 +1,0 @@
-{
-  "/dashboard/motorists/page": "app/dashboard/motorists/page.js",
-  "/dashboard/motorists/[id]/page": "app/dashboard/motorists/[id]/page.js",
-  "/dashboard/addpricing/page": "app/dashboard/addpricing/page.js"
-}

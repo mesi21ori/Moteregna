@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Button } from "../../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
@@ -8,14 +10,18 @@ import { Label } from "../../../components/ui/label"
 import { useRouter } from "next/navigation"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
 import { Badge } from "../../../components/ui/badge"
-import { User } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import { toast } from "sonner"
+import { Switch } from "../../../components/ui/switch"
 
 import axios from "axios"
 interface PricingHistory {
   id: string
   basePrice: number
   perKmPrice: number
+  perMinutePrice: number
+  isActive: boolean
+  isActiveDate: string | null
   createdAt: string
   updatedBy: string
 }
@@ -24,7 +30,9 @@ export default function AddPricingPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     basePrice: "",
-    perKmPrice: ""
+    perKmPrice: "",
+    perMinutePrice: "",
+    isActive: false,
   })
   const [userPricingHistory, setUserPricingHistory] = useState<PricingHistory[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,22 +46,22 @@ export default function AddPricingPage() {
   const fetchUserPricingHistory = async () => {
     try {
       setLoading(true)
+      const token = localStorage.getItem('accessToken')
       const response = await axios.get('http://134.122.27.115:3000/api/prices/user-history', {
           headers: {
-            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTk5bWNydzIwMDAwcnpia3p6bmJhZ2w3IiwicGhvbmUiOiIxMjM0NTY3ODkwIiwicm9sZSI6IlNVUEVSQURNSU4iLCJzZXNzaW9uSWQiOiI4OWVkMTRmNi1hZmNhLTRiOTgtOGI3NS01ZGE0YmMzMDg5ZmIiLCJpYXQiOjE3NDc5OTc5MTEsImV4cCI6MTc1MDU4OTkxMX0.I2y-LnECnJIYBYsE362XbTGtRfmw9aBYWhV_-EYQ2oQ"
+            Authorization: `Bearer ${token}`
           }
         })
 
       if (response.status != 200) {
-        throw new Error('Failed to fetch pricing history')
-      }
 
       const { data } = await response
       setUserPricingHistory(data)
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to load pricing history')
-      if (error instanceof Error && error.message.includes('Unauthorized')) {
-        router.push('/login')
+      toast.error(error instanceof Error ? error.message : "Failed to load pricing history")
+      if (error instanceof Error && error.message.includes("Unauthorized")) {
+        router.push("/login")
       }
     } finally {
       setLoading(false)
@@ -62,8 +70,8 @@ export default function AddPricingPage() {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
-        credentials: 'include'
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
       })
 
       if (response.ok) {
@@ -71,50 +79,66 @@ export default function AddPricingPage() {
         setUserName(`${user.firstName} ${user.lastName}`)
       }
     } catch (error) {
-      console.error('Failed to fetch user data:', error)
+      console.error("Failed to fetch user data:", error)
     }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, isActive: checked }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
-      const response = await fetch('/api/prices/addnew', {
-        method: 'POST',
-        credentials: 'include',
+      const response = await fetch("/api/prices/addnew", {
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           basePrice: Number(formData.basePrice),
-          perKmPrice: Number(formData.perKmPrice)
+          perKmPrice: Number(formData.perKmPrice),
+          perMinutePrice: Number(formData.perMinutePrice) || 0.5,
+          isActive: formData.isActive,
         }),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create pricing')
+        throw new Error(errorData.message || "Failed to create pricing")
       }
 
       const { data } = await response.json()
-      
-    
-      setUserPricingHistory(prev => [data, ...prev])
-      
+
+      // If this price is active, update the UI to reflect that
+      if (data.isActive) {
+        setUserPricingHistory((prev) =>
+          prev.map((price) => ({
+            ...price,
+            isActive: price.id === data.id,
+          })),
+        )
+      }
+
+      setUserPricingHistory((prev) => [data, ...prev])
 
       setFormData({
         basePrice: "",
-        perKmPrice: ""
+        perKmPrice: "",
+        perMinutePrice: "",
+        isActive: false,
       })
 
-      toast.success('Pricing created successfully')
+      toast.success("Pricing created successfully")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create pricing')
+      toast.error(error instanceof Error ? error.message : "Failed to create pricing")
     }
   }
 
@@ -145,31 +169,40 @@ export default function AddPricingPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Base Price</TableHead>
-                    <TableHead>Per KM Price</TableHead>
+                    <TableHead>Per KM</TableHead>
+                    <TableHead>Per Minute</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Updated By</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {userPricingHistory.length > 0 ? (
                     userPricingHistory.map((price) => (
                       <TableRow key={price.id}>
-                        <TableCell>{price.basePrice.toFixed(2)} ETB</TableCell>
-                        <TableCell>{price.perKmPrice.toFixed(2)} ETB</TableCell>
+                        <TableCell>{price.basePrice !== undefined ? price.basePrice.toFixed(2) : "0.00"} ETB</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{price.createdAt}</Badge>
+                          {price.perKmPrice !== undefined ? price.perKmPrice.toFixed(2) : "0.00"} ETB
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center">
-                            <User className="mr-2 h-4 w-4 text-primary" />
-                            {price.updatedBy}
-                          </div>
+                          {price.perMinutePrice !== undefined ? price.perMinutePrice.toFixed(2) : "0.00"} ETB
+                        </TableCell>
+                        <TableCell>
+                          {price.isActive ? (
+                            <Badge className="bg-green-100 text-green-800 border-green-300">
+                              <CheckCircle className="mr-1 h-3 w-3" /> Active
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Inactive</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{price.createdAt}</Badge>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         No pricing history found
                       </TableCell>
                     </TableRow>
@@ -184,7 +217,7 @@ export default function AddPricingPage() {
         <Card>
           <CardHeader>
             <CardTitle>Create New Pricing</CardTitle>
-            <CardDescription>Add new base and per kilometer pricing</CardDescription>
+            <CardDescription>Add new pricing configuration</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -196,7 +229,7 @@ export default function AddPricingPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="10.00"
+                  placeholder="100.00"
                   value={formData.basePrice}
                   onChange={handleInputChange}
                   required
@@ -210,20 +243,40 @@ export default function AddPricingPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="2.50"
+                  placeholder="1.20"
                   value={formData.perKmPrice}
                   onChange={handleInputChange}
                   required
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="perMinutePrice">Per Minute Price (ETB)</Label>
+                <Input
+                  id="perMinutePrice"
+                  name="perMinutePrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.50"
+                  value={formData.perMinutePrice}
+                  onChange={handleInputChange}
+                />
+                <p className="text-sm text-muted-foreground">Default is 0.50 ETB per minute if not specified</p>
+              </div>
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch id="isActive" checked={formData.isActive} onCheckedChange={handleSwitchChange} />
+                <Label htmlFor="isActive">Set as active pricing</Label>
+              </div>
               <div className="flex justify-end gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => {
                     setFormData({
                       basePrice: "",
-                      perKmPrice: ""
+                      perKmPrice: "",
+                      perMinutePrice: "",
+                      isActive: false,
                     })
                   }}
                 >

@@ -31,7 +31,7 @@ export default async function handler(
       
       // Then delete the user (parent record)
       prisma.user.delete({
-        where: { id: motorist.userId }
+        where: { id: motorist.userId ?? "" }
       })
     ])
 

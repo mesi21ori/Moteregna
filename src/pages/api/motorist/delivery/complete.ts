@@ -11,7 +11,7 @@ const updateDeliverySchema = z.object({
   totalCost: z.number().min(0, "Total cost must be a positive number"),
   status: z.enum(["PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED", "CANCELLED"]),
   endTime: z.string().min(1, "End time is required"),
-  destination: z.string().min(1, "destination location is required"), 
+  destination: z.string(), 
   destinationLat: z.number().min(1, "destination latitude location is required"),  
   destinationLong: z.number().min(1, "destination longitude is required"), 
 });
@@ -62,6 +62,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     let endLocationId = delivery.endLocationId;
+    if(validatedData.destination == ''){
+      validatedData.destination = 'N/A'
+    }
 
     if (validatedData.status === "DELIVERED" && validatedData.destination && validatedData.destinationLat && validatedData.destinationLong) {
       const endLocation = await prisma.location.create({

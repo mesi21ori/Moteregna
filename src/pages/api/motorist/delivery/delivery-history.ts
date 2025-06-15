@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       include: {
         startLocation: true,
         endLocation: true,
-        customer: true,
+        Customer: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -94,17 +94,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Format the response data
     const formattedDeliveries: FormattedDelivery[] = deliveries.map((delivery) => ({
       totalDistance: delivery.distance,
-      source: delivery.startLocation.name,
-      destination: delivery.endLocation?.name ?? null,
+      source: delivery.startLocationId ?? '', // fallback to empty string if null
+      destination: delivery.endLocationId ?? null,
       totalCost: delivery.fee,
       status: delivery.status,
-      sourceLat: delivery.startLocation.latitude,
-      sourceLong: delivery.startLocation.longitude,
+      sourceLat: delivery.startLocation?.latitude ?? 0, // assuming startLocation has latitude
+      sourceLong: delivery.startLocation?.longitude ?? 0, // assuming startLocation has longitude
       destinationLat: delivery.endLocation?.latitude ?? null,
       destinationLong: delivery.endLocation?.longitude ?? null,
       startTime: delivery.startTime?.toISOString() ?? null,
       endTime: delivery.endTime?.toISOString() ?? null,
-      customerPhone: delivery.customer?.phonenumber ?? null,
+      customerPhone: delivery.customerPhone ?? null,
     }));
 
     // Get total count for pagination metadata

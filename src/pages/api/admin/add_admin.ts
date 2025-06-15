@@ -64,7 +64,7 @@ export default async function handler(
 
     const validatedData = createAdminSchema.parse(req.body);
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findFirst({
       where: { phone: validatedData.phone },
     });
 

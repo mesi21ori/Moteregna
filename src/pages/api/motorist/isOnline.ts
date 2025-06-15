@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: 'Motorist not found' });
     }
 
-    if (motorist.user.id !== decoded.userId) {
+    if (motorist.user?.id !== decoded.userId) {
       return res.status(403).json({ message: 'Forbidden: You do not have permission to update this motorist' });
     }
 
